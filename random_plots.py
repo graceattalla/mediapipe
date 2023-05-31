@@ -69,42 +69,16 @@
 #         Landmark(x=-0.022689975798130035, y=-0.04793510213494301, z=-0.029320545494556427, visibility=0.0, presence=0.0), Landmark(x=-0.02022061124444008, y=-0.06689207255840302, z=-0.04958503320813179, visibility=0.0, presence=0.0), Landmark(x=-0.035246092826128006, y=0.017701510339975357, z=-0.011708207428455353, visibility=0.0, presence=0.0), 
 #         Landmark(x=-0.04860502481460571, y=-0.0009354995563626289, z=-0.011052142828702927, visibility=0.0, presence=0.0), Landmark(x=-0.05703653395175934, y=-0.020463258028030396, z=-0.015654459595680237, visibility=0.0, presence=0.0), Landmark(x=-0.06115962937474251, y=-0.035597655922174454, z=-0.03200802579522133, visibility=0.0, presence=0.0)]])
 
-import pandas as pd
+import numpy as np
+import scipy as scipy
+from scipy.optimize import minimize
+def f(x):
+   return .6*(1 - x[0])**2
+result = scipy.optimize.minimize(f, [2, -1], method="Nelder-Mead")
 
-all_keys = []
+optimal_param = result.x  # Optimized parameter value
+max_value = -result.fun
 
-dict = {}
-
-df = []
-
-
-handedness_keys = ["Index Right", "Score Right"]
-
-
-all_keys.extend(handedness_keys)
-
-# d_frame = pd.DataFrame(columns = all_keys)
-
-##LOOP HERE
-#set the dictionary to None for all keys
-dict = {key: None for key in all_keys}
-
-#add the values that are known
-dict["Index Right"] = 3
-dict["Score Right"] = 3
-
-#append the data frame
-df.append(dict)
-
-dict = {key: None for key in all_keys}
-
-
-dict["Index Right"] = 5
-
-df.append(dict)
-
-d_frame = pd.DataFrame(df, columns = all_keys)
-
-print(d_frame)
-
+print("Optimized Parameter:", optimal_param)
+print("Maximum Value:", max_value)
 
