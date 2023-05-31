@@ -14,7 +14,7 @@ import scipy as scipy
 model_path = r'C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Github\mediapipe\hand_landmarker.task'
 
 # Create a hand landmarker instance with the video mode:
-def process_video(video_to_process, mindetect): #optimizer for just min detect for noe
+def process_video(video_to_process, mindetect, minpres): #optimizer for just min detect for noe
 
   #CREATE THE TASK
   BaseOptions = mp.tasks.BaseOptions
@@ -41,8 +41,8 @@ def process_video(video_to_process, mindetect): #optimizer for just min detect f
 
   numhands = 1
   #mindetect = 0.3
-  minpres = 0.2
-  mintrack = 0.2
+  # minpres = 0.2
+  mintrack = 1
 
   options = HandLandmarkerOptions(
       base_options=BaseOptions(model_asset_path=r'C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Github\mediapipe\hand_landmarker.task'),
@@ -205,22 +205,24 @@ FONT_SIZE = 1
 FONT_THICKNESS = 1
 HANDEDNESS_TEXT_COLOR = (88, 205, 54) # vibrant green
 
-video_to_process = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\test_video_bb_1.mp4"
+video_to_process = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Fatigue_Vids\Cropped\P19\P19_B_post_cropped_6s_720p.mp4"
 
 
 def num_rows(param):
-   
-  output_df = process_video(video_to_process, param[0])[1]
+  mindetect, minpres = param
+  print(type(param))
+  output_df = process_video(video_to_process, param[0], param[1])[1]
   num_rows = output_df.shape[0]
   print(f"param: {param}")
   print(f"num rows: {num_rows}")
-
+ 
   return -num_rows
 
 #def confidence_optimization():
   
-initial_param = 0.5
-result = minimize(num_rows, initial_param, method='Nelder-Mead', options={'xatol': 1e-2}) #need to pass in param??
+initial_guess = [0.3, 0.3]
+bnds = ((0.0, 1.0), (0.0, 1.0))
+result = minimize(num_rows, initial_guess, method='Powell', bounds=bnds, options={'xtol': 0.1}) #need to pass in param??
 optimal_param = result.x, 2  # Optimized parameter value
 max_value = -result.fun
 

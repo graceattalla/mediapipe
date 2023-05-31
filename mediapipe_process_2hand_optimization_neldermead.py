@@ -3,15 +3,18 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 from mediapipe.framework.formats import landmark_pb2
 from mediapipe import solutions
+from scipy.optimize import minimize
+
 import cv2
 import os
 import pandas as pd
 import numpy as np
+import scipy as scipy
 
 model_path = r'C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Github\mediapipe\hand_landmarker.task'
 
 # Create a hand landmarker instance with the video mode:
-def process_video(video_to_process):
+def process_video(video_to_process, mindetect, minpres): #optimizer for just min detect for noe
 
   #CREATE THE TASK
   BaseOptions = mp.tasks.BaseOptions
@@ -37,10 +40,9 @@ def process_video(video_to_process):
   '''
 
   numhands = 1
-  mindetect = 0.2
-  minpres = 0.2
+  #mindetect = 0.3
+  # minpres = 0.2
   mintrack = 1
-
 
   options = HandLandmarkerOptions(
       base_options=BaseOptions(model_asset_path=r'C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Github\mediapipe\hand_landmarker.task'),
@@ -177,8 +179,8 @@ def process_video(video_to_process):
           df_list.append(d_frame)
 
         #draw landmarks on the image
-        # annotated_frame = draw_landmarks_on_image(frame, hand_landmarker_result)
-        # outvid.write(annotated_frame) #write to outvid for each frame
+        #annotated_frame = draw_landmarks_on_image(frame, hand_landmarker_result)
+        #outvid.write(annotated_frame) #write to outvid for each frame
                   
           
       else:
@@ -195,13 +197,41 @@ def process_video(video_to_process):
   outvid.release()
   cap.release()
 
-  return hand_landmarker_result
+  return hand_landmarker_result, output_df
 
 
 MARGIN = 10  # pixels
 FONT_SIZE = 1
 FONT_THICKNESS = 1
 HANDEDNESS_TEXT_COLOR = (88, 205, 54) # vibrant green
+
+video_to_process = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Fatigue_Vids\Cropped\P19\P19_B_post_cropped_6s_720p.mp4"
+
+
+def num_rows(param):
+  mindetect, minpres = param
+  print(type(param))
+  output_df = process_video(video_to_process, param[0], param[1])[1]
+  num_rows = output_df.shape[0]
+  print(f"param: {param}")
+  print(f"num rows: {num_rows}")
+ 
+  return -num_rows
+
+#def confidence_optimization():
+  
+initial_guess = [0.3, 0.3]
+result = minimize(num_rows, initial_guess, method='Nelder-Mead', options={'xatol': 0.01}) #need to pass in param??
+optimal_param = result.x, 2  # Optimized parameter value
+max_value = -result.fun
+
+print("Optimized Parameter:", optimal_param)
+print("Maximum Value:", max_value)
+
+# confidence_optimization()
+
+  
+
 
 def draw_landmarks_on_image(rgb_image, detection_result): #taken directly from mediapipe example code
   hand_landmarks_list = detection_result.hand_landmarks
