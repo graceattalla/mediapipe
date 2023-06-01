@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import scipy as scipy
 
-model_path = r'C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Github\mediapipe\hand_landmarker.task'
+model_path = r'C:\Users\grace\Documents\GitHub\mediapipe\hand_landmarker.task'
 
 # Create a hand landmarker instance with the video mode:
 def process_video(video_to_process, mindetect, minpres): #optimizer for just min detect for noe
@@ -45,7 +45,7 @@ def process_video(video_to_process, mindetect, minpres): #optimizer for just min
   mintrack = 1
 
   options = HandLandmarkerOptions(
-      base_options=BaseOptions(model_asset_path=r'C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Github\mediapipe\hand_landmarker.task'),
+      base_options=BaseOptions(model_asset_path=model_path),
       running_mode=VisionRunningMode.VIDEO, num_hands = numhands,
       min_hand_detection_confidence = mindetect, min_hand_presence_confidence = minpres, min_tracking_confidence = mintrack)
   
@@ -205,7 +205,7 @@ FONT_SIZE = 1
 FONT_THICKNESS = 1
 HANDEDNESS_TEXT_COLOR = (88, 205, 54) # vibrant green
 
-video_to_process = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Fatigue_Vids\Cropped\P04\P04_B_post_cropped_partial_720p.mp4"
+video_to_process = r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Cropped\P19\Full\P19_B_post_totalcrop.mp4"
 
 
 #brute force method...
