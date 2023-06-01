@@ -205,33 +205,41 @@ FONT_SIZE = 1
 FONT_THICKNESS = 1
 HANDEDNESS_TEXT_COLOR = (88, 205, 54) # vibrant green
 
-video_to_process = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Fatigue_Vids\Cropped\P19\P19_B_post_cropped_6s_720p.mp4"
+video_to_process = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Fatigue_Vids\Cropped\P04\P04_B_post_cropped_partial_720p.mp4"
 
 
-def num_rows(param):
-  mindetect, minpres = param
-  print(type(param))
-  output_df = process_video(video_to_process, param[0], param[1])[1]
-  num_rows = output_df.shape[0]
-  print(f"param: {param}")
-  print(f"num rows: {num_rows}")
- 
-  return -num_rows
+#brute force method...
+max_num_rows = 0
+max_mindetect = 0
+max_minpres = 0
 
-#def confidence_optimization():
-  
-initial_guess = [0.3, 0.3]
-bnds = ((0.0, 1.0), (0.0, 1.0))
-result = scipy.optimize.differential_evolution(num_rows, bounds=bnds, mutation=(0.4, 0.6), recombination=0.7, disp=True, atol=3, updating='immediate', x0=initial_guess) #need to pass in param??
-optimal_param = result.x # Optimized parameter value
-max_value = -result.fun
+opt_list = []
 
-print("Optimized Parameter:", optimal_param)
-print("Maximum Value:", max_value)
+for mindetect in np.arange(0.1, 1.1, 0.1):
+  for minpres  in np.arange(0.1, 1.1, 0.1):
+    output_df = process_video(video_to_process, mindetect, minpres)[1]
+    num_rows = output_df.shape[0]
+    if num_rows > max_num_rows:
+      max_num_rows = num_rows
+      max_mindetect = mindetect
+      max_minpres = minpres
+      print(f"NEW MAX: {max_num_rows}")
+    print(f"rows: {num_rows}")
+    print(f"detect: {mindetect}")
+    print(f"pres: {minpres}")
 
-# confidence_optimization()
+    row_data = {'Num Rows': num_rows, 'Detect': mindetect, 'Presence': minpres}
+    opt_list.append(row_data)
 
-  
+opt_df = pd.DataFrame(opt_list)
+
+
+save_opt_path = os.path.splitext(video_to_process)[0] + "_Optimization" + ".csv"
+opt_df.to_csv(save_opt_path, index=False)
+
+print(f"max rows: {max_num_rows}")
+print(f"max detect: {max_mindetect}")
+print(f"max pres: {max_minpres}")
 
 
 def draw_landmarks_on_image(rgb_image, detection_result): #taken directly from mediapipe example code

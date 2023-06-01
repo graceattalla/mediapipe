@@ -37,8 +37,8 @@ def process_video(video_to_process):
   '''
 
   numhands = 1
-  mindetect = 0.2
-  minpres = 0.2
+  mindetect = 0.1
+  minpres = 0.4
   mintrack = 1
 
 
@@ -177,8 +177,8 @@ def process_video(video_to_process):
           df_list.append(d_frame)
 
         #draw landmarks on the image
-        # annotated_frame = draw_landmarks_on_image(frame, hand_landmarker_result)
-        # outvid.write(annotated_frame) #write to outvid for each frame
+        annotated_frame = draw_landmarks_on_image(frame, hand_landmarker_result)
+        outvid.write(annotated_frame) #write to outvid for each frame
                   
           
       else:
