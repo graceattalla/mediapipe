@@ -205,7 +205,7 @@ FONT_SIZE = 1
 FONT_THICKNESS = 1
 HANDEDNESS_TEXT_COLOR = (88, 205, 54) # vibrant green
 
-video_to_process = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Fatigue_Vids\Cropped\P04\P04_B_post_cropped_partial_720p.mp4"
+video_to_process = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Fatigue_Vids\Cropped\P19\P19_B_post_cropped_6s_1080p.mp4"
 
 
 #brute force method...
@@ -215,8 +215,8 @@ max_minpres = 0
 
 opt_list = []
 
-for mindetect in np.arange(0.1, 1.1, 0.1):
-  for minpres  in np.arange(0.1, 1.1, 0.1):
+for mindetect in np.arange(0.1, 0.6, 0.1):
+  for minpres  in np.arange(0.1, 0.6, 0.1):
     output_df = process_video(video_to_process, mindetect, minpres)[1]
     num_rows = output_df.shape[0]
     if num_rows > max_num_rows:
