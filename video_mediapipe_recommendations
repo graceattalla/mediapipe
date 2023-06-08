@@ -1,0 +1,14 @@
+
+VIDEO CAPTURE
+These are recommendations Grace Attalla has for recording participant data when intending to use mediapipe.
+
+Hand Landmarker
+-be able to see the base of the hand at all times. This is how the box around the hand is formed. For box and blocks, consider taking the videos from a birds eye angle rather than from infront of the participant.
+
+Holistic
+-research grade EEG headset electrode is sometimes mistaken for face. 
+
+
+VIDEO PRE-PROCESSING
+Pose Detection
+-Crop out any blank spaces where the body is covered is possible. For example, in box and blocks videos taken from infront of the participant, crop out the bottom of the image containing the side of the box. The model seemed to try to detect legs in this area if this was not done.

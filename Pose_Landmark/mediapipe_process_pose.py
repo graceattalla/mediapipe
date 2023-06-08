@@ -8,7 +8,7 @@ import os
 import pandas as pd
 import numpy as np
 
-model_path = r'C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Github\mediapipe\Pose_Landmark\pose_landmarker_lite.task'
+model_path = r'C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Github\mediapipe\Pose_Landmark\pose_landmarker_heavy.task'
 
 # Create a hand landmarker instance with the video mode:
 def process_video(video_to_process):
