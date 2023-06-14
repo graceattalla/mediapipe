@@ -12,9 +12,55 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_holistic = mp.solutions.holistic
 
+def draw_landmarks_on_image(image, results):
+  image.flags.writeable = True
+  # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+  annotated_image = np.copy(image)
+
+  #face landmarks
+
+  # mp_drawing.draw_landmarks(
+  #     annotated_image,
+  #     results.face_landmarks,
+  #     mp_holistic.FACEMESH_TESSELATION,
+  #     landmark_drawing_spec=None,
+  #     connection_drawing_spec=mp_drawing_styles
+  #     .get_default_face_mesh_tesselation_style())
+  # mp_drawing.draw_landmarks(
+  #     annotated_image,
+  #     results.face_landmarks,
+  #     mp_holistic.FACEMESH_CONTOURS,
+  #     landmark_drawing_spec=None,
+  #     connection_drawing_spec=mp_drawing_styles
+  #     .get_default_face_mesh_contours_style())
+
+  mp_drawing.draw_landmarks(
+      annotated_image,
+      results.pose_landmarks,
+      mp_holistic.POSE_CONNECTIONS,
+      landmark_drawing_spec=mp_drawing_styles
+      .get_default_pose_landmarks_style())
+  mp_drawing.draw_landmarks(
+    annotated_image,
+    results.left_hand_landmarks,
+    mp_holistic.HAND_CONNECTIONS,
+    landmark_drawing_spec=mp_drawing_styles
+    .get_default_hand_landmarks_style())
+  mp_drawing.draw_landmarks(
+    annotated_image,
+    results.right_hand_landmarks,
+    mp_holistic.HAND_CONNECTIONS,
+    landmark_drawing_spec=mp_drawing_styles
+    .get_default_hand_landmarks_style())
+  # # Flip the image horizontally for a selfie-view display.
+  # cv2.imshow('MediaPipe Holistic', cv2.flip(image, 1))
+  # if cv2.waitKey(5) & 0xFF == 27:
+  #   break
+  return annotated_image
+
 # Create a hand landmarker instance with the video mode:
 #take in mindetect and mintrack to optimize
-def process_video(video_to_process):
+def process_video(video_to_process, mindetect):
 
   #CREATE THE TASK
   BaseOptions = mp.tasks.BaseOptions
@@ -38,7 +84,7 @@ def process_video(video_to_process):
 
   '''
 
-  mindetect = 0.8
+  # mindetect = 0.8
   mintrack = 0.9
   numhands = 1
 
@@ -204,50 +250,33 @@ def process_video(video_to_process):
   outvid.release()
   cap.release()
 
-  return holistic_landmarker_result
+  return holistic_landmarker_result, output_df
 
-def draw_landmarks_on_image(image, results):
-  image.flags.writeable = True
-  # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-  annotated_image = np.copy(image)
+#brute force method...
 
-  #face landmarks
+video_to_process = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Holistic\Fatigue Cropped\P05\P05_B_post_6s_1080p.mp4"
 
-  # mp_drawing.draw_landmarks(
-  #     annotated_image,
-  #     results.face_landmarks,
-  #     mp_holistic.FACEMESH_TESSELATION,
-  #     landmark_drawing_spec=None,
-  #     connection_drawing_spec=mp_drawing_styles
-  #     .get_default_face_mesh_tesselation_style())
-  # mp_drawing.draw_landmarks(
-  #     annotated_image,
-  #     results.face_landmarks,
-  #     mp_holistic.FACEMESH_CONTOURS,
-  #     landmark_drawing_spec=None,
-  #     connection_drawing_spec=mp_drawing_styles
-  #     .get_default_face_mesh_contours_style())
+max_num_rows = 0
+max_mindetect = 0
+max_minpres = 0
 
-  mp_drawing.draw_landmarks(
-      annotated_image,
-      results.pose_landmarks,
-      mp_holistic.POSE_CONNECTIONS,
-      landmark_drawing_spec=mp_drawing_styles
-      .get_default_pose_landmarks_style())
-  mp_drawing.draw_landmarks(
-    annotated_image,
-    results.left_hand_landmarks,
-    mp_holistic.HAND_CONNECTIONS,
-    landmark_drawing_spec=mp_drawing_styles
-    .get_default_hand_landmarks_style())
-  mp_drawing.draw_landmarks(
-    annotated_image,
-    results.right_hand_landmarks,
-    mp_holistic.HAND_CONNECTIONS,
-    landmark_drawing_spec=mp_drawing_styles
-    .get_default_hand_landmarks_style())
-  # # Flip the image horizontally for a selfie-view display.
-  # cv2.imshow('MediaPipe Holistic', cv2.flip(image, 1))
-  # if cv2.waitKey(5) & 0xFF == 27:
-  #   break
-  return annotated_image
+opt_list = []
+
+for mindetect in np.arange(0.3, 1.0, 0.1):
+  output_df = process_video(video_to_process, mindetect)[1]
+  non_none_rows = output_df.notna().any(axis=1).sum()
+  if non_none_rows > max_num_rows:
+    max_num_rows = non_none_rows
+    max_mindetect = mindetect
+    print(f"NEW MAX: {max_num_rows}")
+  print(f"non none rows: {non_none_rows}")
+  print(f"detect: {mindetect}")
+
+  row_data = {'Num Rows': non_none_rows, 'Detect': mindetect}
+  opt_list.append(row_data)
+
+opt_df = pd.DataFrame(opt_list)
+
+
+save_opt_path = os.path.splitext(video_to_process)[0] + "_Optimization" + ".csv"
+opt_df.to_csv(save_opt_path, index=False)
