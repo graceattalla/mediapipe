@@ -1,8 +1,9 @@
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
+import os
 
-video_to_process = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Fatigue_Vids_Original\P19\P19_B_post.mp4"
+video_to_process = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\P19\P19_B_post.mp4"
 
 cap = cv2.VideoCapture(video_to_process)
     
@@ -20,9 +21,9 @@ frame_number = int(cap.get(cv2.CAP_PROP_POS_FRAMES)) #frame number must be an in
 cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
 timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)
 
-ret, frame = cap.read()
+ret, frame = cap.read() #gets the first frame
 
-#Code from ChatGPT
+#Code adapted from ChatGPT
 
 ### STEP 1: Find the points of the box and blocks rectangle ###
 #click in CW direction starting at top left
@@ -91,69 +92,6 @@ if rectangle_selected and len(points) == 4:
 # Close all windows
 cv2.destroyAllWindows()
 
-# # Global variables to store the rectangle's coordinates
-# top_left = None
-# top_right = None
-# bottom_left = None
-# bottom_right = None
-# rectangle_selected = False
-
-# # Mouse callback function
-# def select_rectangle(event, x, y, flags, param):
-#     global top_left, top_right, bottom_left, bottom_right, rectangle_selected
-
-#     if event == cv2.EVENT_LBUTTONDOWN:
-#         top_left = (x, y)
-#         rectangle_selected = False
-
-#     elif event == cv2.EVENT_LBUTTONUP:
-#         bottom_right = (x, y)
-#         rectangle_selected = True
-
-#         # Calculate the remaining corners
-#         top_right = (bottom_right[0], top_left[1])
-#         bottom_left = (top_left[0], bottom_right[1])
-
-# # Load the image
-# image = np.copy(frame)
-
-# # Create a window and bind the mouse callback function to it
-# cv2.namedWindow('Select Rectangle')
-# cv2.setMouseCallback('Select Rectangle', select_rectangle)
-
-# while True:
-#     # Clone the original image
-#     display_image = image.copy()
-
-#     # Draw the currently selected rectangle
-#     if top_left and bottom_right:
-#         cv2.rectangle(display_image, top_left, bottom_right, (0, 255, 0), 2)
-
-#     # Display the image
-#     cv2.imshow('Select Rectangle', display_image)
-
-#     # Exit the loop if 'ESC' key is pressed or rectangle is selected
-#     key = cv2.waitKey(1) & 0xFF
-#     if key == 27 or rectangle_selected:
-#         break
-
-# # Check if the rectangle is selected
-# if rectangle_selected:
-#     # Extract the corner coordinates
-#     x1, y1 = top_left
-#     x2, y2 = top_right
-#     x3, y3 = bottom_left
-#     x4, y4 = bottom_right
-
-#     # Print the corner coordinates
-#     print("Top Left: ({}, {})".format(x1, y1))
-#     print("Top Right: ({}, {})".format(x2, y2))
-#     print("Bottom Left: ({}, {})".format(x3, y3))
-#     print("Bottom Right: ({}, {})".format(x4, y4))
-
-# # Close all windows
-# cv2.destroyAllWindows()
-
 ### STEP 2: Rotate so that box is straight ###
 
 def rotate_image(image, angle, center):
@@ -167,9 +105,11 @@ def rotate_image(image, angle, center):
 delta_x = top_right[0] - top_left[0]
 delta_y = top_right[1] - top_left[1]
 angle = np.degrees(np.arctan2(delta_y, delta_x))
+print(f'angle: {angle}')
 
 # Calculate the center of rotation
 center = ((top_left[0] + top_right[0]) // 2, (top_left[1] + top_right[1]) // 2)
+print(f'center: {center}')
 
 # Rotate the image
 rotated_image = rotate_image(image, angle, center)
@@ -181,11 +121,32 @@ rotated_height, rotated_width = rotated_image.shape[:2]
 x_offset = int((rotated_width - width) / 2)
 y_offset = int((rotated_height - height) / 2)
 
-# Crop the image to remove black space
-cropped_image = rotated_image[y_offset:y_offset + int(height), x_offset:x_offset + int(width)]
+pathvid = os.path.splitext(video_to_process)[0] + '_rotated.jpg' #Add _skeleton to video name
+# outvid = cv2.VideoWriter(pathvid,fourcc,fps,(int(width),int(height)))
 
-# Display the original and rotated images
+
+# # Display the original and rotated images
+# cv2.imshow('Original Image', image)
+# cv2.imshow('Rotated Image', rotated_image)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
+### STEP 3: Crop so that the box is always in the center and at the same size
+
+#need original width (width, height)
+#need how far right is away from the side
+#crop by the difference of these two
+
+center_height_box = (y2-y3)/2 + y3
+print(f'center box: {center_height_box}')
+
+rotated_image_2 = rotated_image[0:int(center_height_box), int(x1):int(x2)]
+
 cv2.imshow('Original Image', image)
-cv2.imshow('Rotated Image', rotated_image)
+cv2.imshow('Rotated Image', rotated_image_2)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
+#now crop so that other side
+
+#now crop so that the bottom is a certian number of pixels away
