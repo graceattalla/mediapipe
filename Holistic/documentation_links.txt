@@ -1,0 +1,4 @@
+General holistic documentation: https://github.com/google/mediapipe/blob/master/docs/solutions/holistic.md#resources
+
+Test details including more specific annotated image options: https://github.com/google/mediapipe/blob/master/mediapipe/python/solutions/holistic_test.py
+
