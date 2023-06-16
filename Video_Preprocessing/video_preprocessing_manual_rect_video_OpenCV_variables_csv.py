@@ -15,15 +15,27 @@ import pandas as pd
 def process_folder(folder):
     
     files = os.listdir(folder) #get a list of the files in the folder
+    # inner_folders = os.listdir(folder)
 
     for file in files:
-        print(f"file: {file}")
-        
         if ".mp4" in file: #only process mp4 videos, can modify if different file type
-            
-            process_path = folder +"\\" + file
-            print(f"-------{process_path}")
+                
+            process_path = folder +"\\" + file #path to video
+            # print(f"-------{process_path}")
             preprocess_variables(process_path)
+
+    # for inner_folder in inner_folders: #each participant has their own folder
+    #     subfolder_path = os.path.join(folder, inner_folder) #create path for inner folder
+    #     # inner_files = os.listdir(folder_path)
+
+    #     for file in subfolder_path:
+    #         print(f"file: {file}")
+        
+    #         if ".mp4" in file: #only process mp4 videos, can modify if different file type
+                
+    #             process_path = folder +"\\" + file #path to video
+    #             print(f"-------{process_path}")
+    #             preprocess_variables(process_path)
 
     save_path = os.path.join(folder, "Preprocessing_variables.csv")
     print(os.path.splitext(folder)[0])
@@ -181,5 +193,5 @@ def preprocess_variables(video_to_process):
     print(dict_vid)
 
 
-process_folder(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\P19\MultiTest")
+process_folder(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Fatigue_Vids_Original_1min\Test Preprocess")
 # preprocess_video(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\P19\MultiTest\P19_B_post_cropped_6s_720p - Copy.mp4")
