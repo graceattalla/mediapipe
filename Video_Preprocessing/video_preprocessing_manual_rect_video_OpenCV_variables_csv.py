@@ -13,29 +13,20 @@ import time
 import pandas as pd
 
 def process_folder(folder):
-    
-    files = os.listdir(folder) #get a list of the files in the folder
-    # inner_folders = os.listdir(folder)
 
-    for file in files:
-        if ".mp4" in file: #only process mp4 videos, can modify if different file type
+    #Go through parent folder and subfolders. Save csv in parent folder (called in function)
+    parent_folder = os.listdir(folder) #get a list of the files in the folder
+
+    for inner in parent_folder:
+
+        if os.path.isdir(os.path.join(folder,inner)): #check that it is a folder
+            files = os.listdir(os.path.join(folder,inner))
+
+            for file in files:
                 
-            process_path = folder +"\\" + file #path to video
-            # print(f"-------{process_path}")
-            preprocess_variables(process_path)
-
-    # for inner_folder in inner_folders: #each participant has their own folder
-    #     subfolder_path = os.path.join(folder, inner_folder) #create path for inner folder
-    #     # inner_files = os.listdir(folder_path)
-
-    #     for file in subfolder_path:
-    #         print(f"file: {file}")
-        
-    #         if ".mp4" in file: #only process mp4 videos, can modify if different file type
-                
-    #             process_path = folder +"\\" + file #path to video
-    #             print(f"-------{process_path}")
-    #             preprocess_variables(process_path)
+                if ".mp4" in file: #only process mp4 videos, can modify if different file type
+                    process_path = folder + "\\" + inner +"\\" + file #path to video
+                    preprocess_variables(process_path)
 
     save_path = os.path.join(folder, "Preprocessing_variables.csv")
     print(os.path.splitext(folder)[0])
@@ -193,5 +184,5 @@ def preprocess_variables(video_to_process):
     print(dict_vid)
 
 
-process_folder(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Fatigue_Vids_Original_1min\Test Preprocess")
+process_folder(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\Test Preprocess 6s")
 # preprocess_video(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\P19\MultiTest\P19_B_post_cropped_6s_720p - Copy.mp4")
