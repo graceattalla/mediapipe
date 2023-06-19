@@ -11,23 +11,30 @@ def process_folder(folder): #this folder contains the unprocessed videos and a C
 
     start_time = time.time()
 
-    files = os.listdir(folder) #get a list of the files in the folder
-    print(f"****{files}")
-
+    #Get the csv in the parent folder
+    files = os.listdir(folder)
     for file in files:
         if ".csv" in file:
             folder_variables = pd.read_csv(folder + "\\" + file)
 
+    parent_folder = os.listdir(folder) #get a list of the files in the folder
+
+    for inner in parent_folder:
+
+        if os.path.isdir(os.path.join(folder,inner)): #check that it is a folder
+            files = os.listdir(os.path.join(folder,inner))
+
+            for file in files:
+                
+                if ".mp4" in file: #only process mp4 videos, can modify if different file type
+                    process_path = folder + "\\" + inner +"\\" + file #path to video
+                    preprocess_video(process_path, folder_variables)
+
+    parent_folder = os.listdir(folder) #get a list of the files in the folder
+    # print(f"****{files}")
+
     # print(folder_variables)
 
-    for file in files:
-        print(f"file: {file}")
-        
-        if ".mp4" in file: #only process mp4 videos, can modify if different file type
-            
-            process_path = folder +"\\" + file
-            print(f"-------{process_path}")
-            process_video(process_path, folder_variables)
 
     end_time = time.time()
     execution_time = end_time - start_time
@@ -38,6 +45,7 @@ def process_folder(folder): #this folder contains the unprocessed videos and a C
 # video_to_process = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\P19\Full BB Video\P19_B_post_cropped_full_720p.mp4"
 # video_to_process = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\P19\P19_B_post_cropped_6s_720p_2.mp4"
 
+#rotate and save preprocessed video
 #create path and video to write to
 def create_vid(video_to_process, final_image, fourcc, fps):
         final_height, final_width, channels = final_image.shape
@@ -53,7 +61,7 @@ def rotate_image(image, angle, center):
     return rotated_image
 
 #rotate, zoom and save preprocessed video
-def process_video(video_to_process, folder_variables):
+def preprocess_video(video_to_process, folder_variables):
     #retrieving variables from dataframe
     vid_row = folder_variables[folder_variables['video path'] == video_to_process]
     print(f"vid row: {vid_row}")
@@ -118,5 +126,5 @@ def process_video(video_to_process, folder_variables):
     outvid.release()
     cap.release()
 
-process_folder(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\P19\MultiTest")
+process_folder(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\Test Preprocess 6s")
 # preprocess_video(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\P19\MultiTest\P19_B_post_cropped_6s_720p - Copy.mp4")
