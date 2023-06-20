@@ -18,7 +18,7 @@ def process_folder(folder): #this folder contains the unprocessed videos and a C
             folder_variables = pd.read_csv(folder + "\\" + file)
 
     parent_folder = os.listdir(folder) #get a list of the files in the folder
-
+    video_num = 1
     for inner in parent_folder:
 
         if os.path.isdir(os.path.join(folder,inner)): #check that it is a folder
@@ -27,8 +27,11 @@ def process_folder(folder): #this folder contains the unprocessed videos and a C
             for file in files:
                 
                 if ".mp4" in file: #only process mp4 videos, can modify if different file type
+                    print(f"file: {file}")
                     process_path = folder + "\\" + inner +"\\" + file #path to video
                     preprocess_video(process_path, folder_variables)
+                    print(f"Video {video_num} complete")
+                    video_num += 1
 
     parent_folder = os.listdir(folder) #get a list of the files in the folder
     # print(f"****{files}")
@@ -67,8 +70,8 @@ def preprocess_video(video_to_process, folder_variables):
     print(f"vid row: {vid_row}")
     angle = vid_row['angle'].item()
     center = (vid_row['center x'].item(), vid_row['center y'].item())
-    print(f"cx: {vid_row['center x']}")
-    print(f"CENTER: {center}")
+    # print(f"cx: {vid_row['center x']}")
+    # print(f"CENTER: {center}")
 
     cap = cv2.VideoCapture(video_to_process)
         
@@ -96,7 +99,7 @@ def preprocess_video(video_to_process, folder_variables):
     while(cap.isOpened()):
         #Capture each frame-by-frame
         frame_number = int(cap.get(cv2.CAP_PROP_POS_FRAMES)) #frame number must be an int I think
-        print(f"frame: {i}")
+        # print(f"frame: {i}")
         cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
         timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)
 
@@ -126,5 +129,6 @@ def preprocess_video(video_to_process, folder_variables):
     outvid.release()
     cap.release()
 
-process_folder(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\Test Preprocess 6s")
+# process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Preprocess_test\6s test")
+process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Fatigue_Vids_Original_1min\B Post")
 # preprocess_video(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\P19\MultiTest\P19_B_post_cropped_6s_720p - Copy.mp4")

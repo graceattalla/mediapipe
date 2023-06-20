@@ -18,6 +18,8 @@ def process_folder(folder):
     parent_folder = os.listdir(folder) #get a list of the files in the folder
 
     for inner in parent_folder:
+        print(parent_folder
+              )
 
         if os.path.isdir(os.path.join(folder,inner)): #check that it is a folder
             files = os.listdir(os.path.join(folder,inner))
@@ -184,5 +186,5 @@ def preprocess_variables(video_to_process):
     print(dict_vid)
 
 
-process_folder(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\Test Preprocess 6s")
-# preprocess_video(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\P19\MultiTest\P19_B_post_cropped_6s_720p - Copy.mp4")
+process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Preprocess_test\6s test")
+# process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Preprocess_test\6s test")
