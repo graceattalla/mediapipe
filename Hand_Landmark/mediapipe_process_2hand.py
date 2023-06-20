@@ -8,7 +8,7 @@ import os
 import pandas as pd
 import numpy as np
 
-model_path = r'C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Github\mediapipe\hand_landmarker.task'
+model_path = r'C:\Users\grace\Documents\GitHub\mediapipe\hand_landmarker.task'
 
 # Create a hand landmarker instance with the video mode:
 def process_video(video_to_process):
@@ -38,12 +38,12 @@ def process_video(video_to_process):
 
   numhands = 1
   mindetect = 0.1
-  minpres = 0.4
+  minpres = 0.1
   mintrack = 1
 
 
   options = HandLandmarkerOptions(
-      base_options=BaseOptions(model_asset_path=r'C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Github\mediapipe\hand_landmarker.task'),
+      base_options=BaseOptions(model_asset_path=model_path),
       running_mode=VisionRunningMode.VIDEO, num_hands = numhands,
       min_hand_detection_confidence = mindetect, min_hand_presence_confidence = minpres, min_tracking_confidence = mintrack)
   
