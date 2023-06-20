@@ -29,7 +29,7 @@ def parallelize_video_processing(folder):
             inner_files = os.listdir(inner_folder)
             full_file_paths = [os.path.join(inner_folder, file) for file in inner_files if ".mp4" in file]
             vid_files.extend(full_file_paths)
-    print(f"vid_files: {vid_files}")
+    print(f"vid_files: {vid_files}") #test
 
     #Run with parallization
     Parallel(n_jobs=2, verbose=10)(delayed(preprocess_video)(os.path.join(folder, file), folder_variables) for file in vid_files)
