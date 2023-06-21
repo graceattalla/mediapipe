@@ -27,12 +27,12 @@ def parallelize_video_processing(folder):
 
         if os.path.isdir(inner_folder): #check if it is a folder
             inner_files = os.listdir(inner_folder)
-            full_file_paths = [os.path.join(inner_folder, file) for file in inner_files if ".mp4" in file]
+            full_file_paths = [os.path.join(inner_folder, file) for file in inner_files if ".mp4" or ".MP4" in file]
             vid_files.extend(full_file_paths)
-    print(f"vid_files: {vid_files}") #test
+    # print(f"vid_files: {vid_files}") #test
 
     #Run with parallization
-    Parallel(n_jobs=2, verbose=10)(delayed(preprocess_video)(os.path.join(folder, file), folder_variables) for file in vid_files)
+    Parallel(n_jobs=-1, verbose=10)(delayed(preprocess_video)(os.path.join(folder, file), folder_variables) for file in vid_files)
 
 #For NOT using parallelization
 def process_folder(folder): #this folder contains the unprocessed videos and a CSV file with their rotation variables.
@@ -144,5 +144,5 @@ def preprocess_video(video_to_process, folder_variables):
     cap.release()
     return i #irrelevant but need to return something?
 
-parallelize_video_processing(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\Test Preprocess 6s")
+parallelize_video_processing(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Non Bpost B Pre by participant\P8-P38")
 # preprocess_video(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\P19\MultiTest\P19_B_post_cropped_6s_720p - Copy.mp4")
