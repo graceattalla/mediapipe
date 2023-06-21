@@ -24,12 +24,11 @@ def process_folder(folder):
 
             for file in files:
                 
-                if ".mp4" in file: #only process mp4 videos, can modify if different file type
+                if ".MP4" or ".mp4" in file: #only process mp4 videos, can modify if different file type
                     process_path = folder + "\\" + inner +"\\" + file #path to video
                     preprocess_variables(process_path)
 
     save_path = os.path.join(folder, "Preprocessing_variables.csv")
-    print(os.path.splitext(folder)[0])
     #Save to csv file (can open in Excel)
     output_df = pd.DataFrame(df_list)
     output_df.to_csv(save_path) 
@@ -184,5 +183,5 @@ def preprocess_variables(video_to_process):
     print(dict_vid)
 
 
-process_folder(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Fatigue_Vids_Original_1min\B Post")
-# preprocess_video(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\P19\MultiTest\P19_B_post_cropped_6s_720p - Copy.mp4")
+process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Non Bpost B Pre by participant\P8-P38")
+# process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Preprocess_test\6s test")
