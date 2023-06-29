@@ -208,7 +208,7 @@ def process_video(video_to_process):
 
     #for labelling of files based on % of frames detected
     non_none_rows = output_df.notna().any(axis=1).sum()
-    percent_filled = round(non_none_rows/output_df.shape[0], 2)
+    percent_filled = (round(non_none_rows/output_df.shape[0], 2))*100
     print(f"non-None row: {non_none_rows}")
     print(f"% data rows: {non_none_rows/output_df.shape[0]}")
 
