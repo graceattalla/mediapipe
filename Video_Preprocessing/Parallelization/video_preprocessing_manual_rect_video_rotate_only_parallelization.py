@@ -144,5 +144,5 @@ def preprocess_video(video_to_process, folder_variables):
     cap.release()
     return i #irrelevant but need to return something?
 
-parallelize_video_processing(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Non Bpost B Pre by participant\P8-P38")
+parallelize_video_processing(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Need to Rotate")
 # preprocess_video(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\P19\MultiTest\P19_B_post_cropped_6s_720p - Copy.mp4")
