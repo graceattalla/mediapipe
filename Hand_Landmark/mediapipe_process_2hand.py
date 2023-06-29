@@ -173,8 +173,8 @@ def process_video(video_to_process):
 
               j += 1
           
-          #add the frame dictionary as a new sub-list to the total list
-          df_list.append(d_frame)
+            #add the frame dictionary as a new sub-list to the total list
+            df_list.append(d_frame)
 
         #draw landmarks on the image
         annotated_frame = draw_landmarks_on_image(frame, hand_landmarker_result)

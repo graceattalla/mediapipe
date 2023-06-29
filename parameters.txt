@@ -4,9 +4,9 @@ With the Hand Landmark model, various optimization algorithms were attemtempted 
 For other models, approximate optimization with different sample videos was used.
 
 Hand Landmark:
-min_hand_detection_confidence =
-min_hand_presence_confidence =
-min_tracking_confidence =
+min_hand_detection_confidence = 0.1
+min_hand_presence_confidence = 0.5
+min_tracking_confidence = 1
 
 Pose:
 min_pose_detection_confidence =
