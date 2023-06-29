@@ -15,7 +15,7 @@ from joblib import Parallel, delayed
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
-mp_holistic = mp.solutions.holistic
+mp_hands = mp.solutions.hands
 
 def process_folder(folder):
   parent_folder = os.listdir(folder)
@@ -31,7 +31,7 @@ def process_folder(folder):
   print(f"vid_files: {vid_files}") #test
 
   #Run with parallization
-  Parallel(n_jobs=6, verbose=10)(delayed(process_video)(os.path.join(folder, file)) for file in vid_files)
+  Parallel(n_jobs=-1, verbose=10)(delayed(process_video)(os.path.join(folder, file)) for file in vid_files)
 
 # Create a hand landmarker instance with the video mode:
 #take in mindetect and mintrack to optimize
@@ -59,19 +59,20 @@ def process_video(video_to_process):
 
   '''
 
-  mindetect = 0.8
-  mintrack = 0.9
-  numhands = 1
+  mindetect = 0.1
+  mintrack = 0.1
+  numhands = 2
 
 
   # options = PoseLandmarkerOptions(
   #     base_options=BaseOptions(model_asset_path=model_path),
   #     running_mode=VisionRunningMode.VIDEO, 
   #     min_pose_detection_confidence = mindetect, min_pose_presence_confidence = minpres, min_tracking_confidence = mintrack)
-  
-  with mp_holistic.Holistic(
+  i = 0
+
+  with mp_hands.Hands(static_image_mode=False,
     min_detection_confidence=mindetect,
-    min_tracking_confidence=mintrack, model_complexity=2,max_num_hands=numhands) as holistic: #refine_face_landmarks = True
+    min_tracking_confidence=mintrack, max_num_hands=numhands) as hands: #refine_face_landmarks = True
     # The landmarker is initialized. Use it here.
     df_list = []
     df_frame_list = []
@@ -87,7 +88,6 @@ def process_video(video_to_process):
     #testing
     print(f"fps: {fps}")
     print(f"Time (s): {total_frames/fps}")
-
     #Modified to save at same path for skeleton video (easier to keep organized)
     pathvid = os.path.splitext(video_to_process)[0] + f'_skeleton_{mindetect}d_{mintrack}t.mp4' #Add _skeleton to video name
     outvid = cv2.VideoWriter(pathvid,fourcc,fps,(int(width),int(height)))
@@ -103,30 +103,27 @@ def process_video(video_to_process):
     #initialize and set column of dataframe
     df_list = []
     cor_hand_keys = []
-    cor_pose_keys = []
     all_keys = []
-    hands = ["Right", "Left"]
+    hands_key = ["Right", "Left"]
     hand_information = ["x", "y", "z"]
-    pose_information = ["x", "y", "z", "visibility"]
+    cor_type = ["Image", "World"]
 
+        #setting the column names for the coordinates
+    for type in cor_type:
+        for r_l in hands_key:
+            for i in range(1, 22):
+                for info in hand_information:
+                    cor_hand_keys.append(f"{info} {type} {i} {r_l}")
 
-    #setting the column names for the hand coordinates
-    for r_l in hands:
-      for i in range(1, 22):
-          for info in hand_information:
-              cor_hand_keys.append(f"{i} {info} {r_l} Hand")
-
-    #setting the column names for the pose coordinates
-    for i in range (1, 34):
-      for info in pose_information:
-        cor_pose_keys.append(f"{i} {info} Pose") #1 x Pose
+    #handedness keys
+    handedness_keys = ["Index Right", "Score Right", "Label Right", 
+                       "Index Left", "Score Left", "Label Left"]
         
-
-
+    all_keys.extend(handedness_keys)  
     all_keys.extend(cor_hand_keys)  
-    all_keys.extend(cor_pose_keys)  
 
-        
+    print(all_keys)
+
     #Read through the video until it is finished
     
     while(cap.isOpened()):
@@ -137,7 +134,6 @@ def process_video(video_to_process):
       timestamp = cap.get(cv2.CAP_PROP_POS_MSEC)
 
       ret, frame = cap.read() #frame has image data in numpy array form
-
         
         #Make sure that the frame is correctly loaded
       if ret==True:
@@ -145,62 +141,62 @@ def process_video(video_to_process):
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
 
         #run the task
-        holistic_landmarker_result = holistic.process(frame)
+        # print(hands)
+        hand_landmarker_result = hands.process(frame)
 
         #set dictionary with all frame keys for each frame- reset for each frame
         d_frame = {key: None for key in all_keys}
 
-        #loop through right and left hand of all points for given frame
+        #loop through total number of hands and all points for given frame
         #although this is a little redundant, it accounts for issues when there is no data for a certain point and leave it as None
-        #can't use zip in for loop becuase hand landmarks and pose landmarks are of different length
+        if hand_landmarker_result.multi_handedness != None:
+          for hand, hand_i, hand_w in zip(hand_landmarker_result.multi_handedness, hand_landmarker_result.multi_hand_landmarks, hand_landmarker_result.multi_hand_world_landmarks):
+            # print(f"-----{hand_i.landmark}")
+            if hand.classification[0].label == "Right":
+              d_frame["Label Right"] = hand.classification[0].label
+              d_frame["Index Right"] = hand.classification[0].index
+              d_frame["Score Right"] = hand.classification[0].score
 
-        #iterate through points of right landmark if it appears
-        j = 1
-        if holistic_landmarker_result.right_hand_landmarks != None:
-          for point in holistic_landmarker_result.right_hand_landmarks.landmark:
-            num_str = str(j)
+              #loop for points in the image and the world coordinates
+              j = 1
+              for point_i, point_w in zip(hand_i.landmark, hand_w.landmark):
+                j_str = str(j)
 
-            d_frame[num_str + " x" + " Right Hand"] = point.x
-            d_frame[num_str + " y" + " Right Hand"] = point.y
-            d_frame[num_str + " z" + " Right Hand"] = point.z
+                d_frame["x Image " + j_str + " Right"] = point_i.x
+                d_frame["y Image " + j_str + " Right"] = point_i.y
+                d_frame["z Image " + j_str + " Right"] = point_i.z
 
-            j += 1
+                d_frame["x World " + j_str + " Right"] = point_w.x
+                d_frame["y World " + j_str + " Right"] = point_w.y
+                d_frame["z World " + j_str + " Right"] = point_w.z
 
-        #iterate through points of left landmark if it appears
-        j = 1
-        if holistic_landmarker_result.left_hand_landmarks != None:
-          for point in holistic_landmarker_result.left_hand_landmarks.landmark:
-            num_str = str(j)
+                j += 1
 
-            d_frame[num_str + " x" + " Left Hand"] = point.x
-            d_frame[num_str + " y" + " Left Hand"] = point.y
-            d_frame[num_str + " z" + " Left Hand"] = point.z
+            if hand.classification[0].label == "Left":
+              d_frame["Label Left"] = hand.classification[0].label
+              d_frame["Index Left"] = hand.classification[0].index
+              d_frame["Score Left"] = hand.classification[0].score
+              #loop for points in the image and the world coordinate
+              j = 1
+              for point_i, point_w in zip(hand_i.landmark, hand_w.landmark):
+                j_str = str(j)
 
-            j += 1
+                d_frame["x Image " + j_str + " Left"] = point_i.x
+                d_frame["y Image " + j_str + " Left"] = point_i.y
+                d_frame["z Image " + j_str + " Left"] = point_i.z
 
-        j = 1
+                d_frame["x World " + j_str + " Left"] = point_w.x
+                d_frame["y World " + j_str + " Left"] = point_w.y
+                d_frame["z World " + j_str + " Left"] = point_w.z
 
-
-        #commented to generate csv without this info for parameter optimization
-        # if holistic_landmarker_result.pose_landmarks != None:
-        #   for point in holistic_landmarker_result.pose_landmarks.landmark:
-        #     num_str = str(j)
-
-        #     d_frame[num_str + " x" + " Pose"] = point.x
-        #     d_frame[num_str + " y" + " Pose"] = point.y
-        #     d_frame[num_str + " z" + " Pose"] = point.z
-        #     d_frame[num_str + " visibility" + " Pose"] = point.visibility
-
-        #     j += 1
-
+                j += 1
           
-        #add the frame dictionary as a new sub-list to the total list
-        df_list.append(d_frame)
+            #add the frame dictionary as a new sub-list to the total list
+            df_list.append(d_frame)
 
         # #draw landmarks on the image
-        annotated_frame = draw_landmarks_on_image(frame, holistic_landmarker_result)
-        outvid.write(annotated_frame) #write to outvid for each frame
-                  
+        annotated_frame = draw_landmarks_on_image(frame, hand_landmarker_result)
+        outvid.write(annotated_frame) #write to outvid for each frame            
           
       else:
         break
@@ -225,52 +221,28 @@ def process_video(video_to_process):
   outvid.release()
   cap.release()
 
-  return holistic_landmarker_result
+  return hand_landmarker_result
 
 def draw_landmarks_on_image(image, results):
   image.flags.writeable = True
   # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
   annotated_image = np.copy(image)
-
-  #face landmarks
-
+  if results.multi_hand_landmarks != None:
+    for hand_landmarks in results.multi_hand_landmarks:
+        mp_drawing.draw_landmarks(
+            annotated_image, hand_landmarks, mp_hands.HAND_CONNECTIONS,
+            mp_drawing_styles.get_default_hand_landmarks_style(),
+            mp_drawing_styles.get_default_hand_connections_style())
   # mp_drawing.draw_landmarks(
-  #     annotated_image,
-  #     results.face_landmarks,
-  #     mp_holistic.FACEMESH_TESSELATION,
-  #     landmark_drawing_spec=None,
-  #     connection_drawing_spec=mp_drawing_styles
-  #     .get_default_face_mesh_tesselation_style())
-  # mp_drawing.draw_landmarks(
-  #     annotated_image,
-  #     results.face_landmarks,
-  #     mp_holistic.FACEMESH_CONTOURS,
-  #     landmark_drawing_spec=None,
-  #     connection_drawing_spec=mp_drawing_styles
-  #     .get_default_face_mesh_contours_style())
-
-  mp_drawing.draw_landmarks(
-      annotated_image,
-      results.pose_landmarks,
-      mp_holistic.POSE_CONNECTIONS,
-      landmark_drawing_spec=mp_drawing_styles
-      .get_default_pose_landmarks_style())
-  mp_drawing.draw_landmarks(
-    annotated_image,
-    results.left_hand_landmarks,
-    mp_holistic.HAND_CONNECTIONS,
-    landmark_drawing_spec=mp_drawing_styles
-    .get_default_hand_landmarks_style())
-  mp_drawing.draw_landmarks(
-    annotated_image,
-    results.right_hand_landmarks,
-    mp_holistic.HAND_CONNECTIONS,
-    landmark_drawing_spec=mp_drawing_styles
-    .get_default_hand_landmarks_style())
+  #   annotated_image,
+  #   results.multi_hand_landmarks,
+  #   mp_hands.HAND_CONNECTIONS,
+  #   landmark_drawing_spec=mp_drawing_styles
+  #   .get_default_hand_landmarks_style())
   # # Flip the image horizontally for a selfie-view display.
   # cv2.imshow('MediaPipe Holistic', cv2.flip(image, 1))
   # if cv2.waitKey(5) & 0xFF == 27:
   #   break
   return annotated_image
 
-process_folder(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\Test Preprocess 6s")
+process_video(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Legacy Test\test_video_2hand_left_first_3.mp4")
