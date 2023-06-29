@@ -7,6 +7,7 @@ Hand Landmarker
 
 Holistic
 -research grade EEG headset electrode is sometimes mistaken for face. 
+-Include head in frame, especially if using holistic.
 
 SELECTING MODEL
 Holistic uses the pose detection to determine the region of interest for the hand, then uses the handlandmark detection. If a video is taken without the base of the hadn present (necessary for hand landmark region of interest) this model imght be a good method.

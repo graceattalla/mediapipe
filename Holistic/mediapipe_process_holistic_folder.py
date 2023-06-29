@@ -26,12 +26,12 @@ def process_folder(folder):
 
       if os.path.isdir(inner_folder): #check if it is a folder
           inner_files = os.listdir(inner_folder)
-          full_file_paths = [os.path.join(inner_folder, file) for file in inner_files if ".mp4" in file]
+          full_file_paths = [os.path.join(inner_folder, file) for file in inner_files if (".mp4" or ".MP4") in file]
           vid_files.extend(full_file_paths)
-  print(f"vid_files: {vid_files}") #test
+  # print(f"vid_files: {vid_files}") #test
 
   #Run with parallization
-  Parallel(n_jobs=6, verbose=10)(delayed(process_video)(os.path.join(folder, file)) for file in vid_files)
+  Parallel(n_jobs=-1, verbose=10)(delayed(process_video)(os.path.join(folder, file)) for file in vid_files)
 
 # Create a hand landmarker instance with the video mode:
 #take in mindetect and mintrack to optimize
@@ -59,7 +59,7 @@ def process_video(video_to_process):
 
   '''
 
-  mindetect = 0.8
+  mindetect = 0.6
   mintrack = 0.9
   numhands = 1
 
@@ -273,4 +273,4 @@ def draw_landmarks_on_image(image, results):
   #   break
   return annotated_image
 
-process_folder(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Preprocessing\Test Preprocess 6s")
+process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Not Done\0.6 Detect 0.9 Track")
