@@ -25,7 +25,7 @@ For single csv
 def process_folder(folder):
   
     #import the go and stop times csv as a data frame
-    go_stop_path = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\B&B Extraction\Test\TEST Go and Stop Times.xlsx" #this should be manually entered
+    go_stop_path = r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Go and Stop Times- Original Videos.xlsx" #this should be manually entered
     times_df = pd.read_excel(go_stop_path)
 
     parent_folder = os.listdir(folder)
@@ -39,16 +39,17 @@ def process_folder(folder):
             inner_files = os.listdir(inner_folder)
             for file in inner_files:
                 if ".csv" in file:
-                    print(file)
-                    full_file_path = os.path.join(inner_folder, file)
-                    BB_extraction(full_file_path, file, inner_folder, percentage_list, times_df)
-                    # full_file_paths = [os.path.join(inner_folder, file) for file in inner_files if ".csv" in file] #get a list of all the mediapipe csv files
-                    # sheet_files.extend(full_file_paths)
+                    if "B&B" not in file:
+                        print(file)
+                        full_file_path = os.path.join(inner_folder, file)
+                        BB_extraction(full_file_path, file, inner_folder, percentage_list, times_df)
+                        # full_file_paths = [os.path.join(inner_folder, file) for file in inner_files if ".csv" in file] #get a list of all the mediapipe csv files
+                        # sheet_files.extend(full_file_paths)
 
     percentage_df = pd.DataFrame(percentage_list)
     avg_percentage = percentage_df['Percent Frames with Landmark'].mean()
     percentage_df.loc[0, "Average Percent Frames with Landmark"] = avg_percentage
-    save_path = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\B&B Extraction\Test\Test Percentage Filled.csv"
+    save_path = r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Holistic\0.8 Detect 0.9 Track\Holistic Percentage Filled 0.8d 0.9t.csv"
     #Save to csv file (can open in Excel)
     percentage_df.to_csv(save_path)
 
@@ -81,9 +82,12 @@ def BB_extraction(csv_to_process, file_name, inner_folder, percentage_list, time
     non_none_rows =bb_mediapipe_df.iloc[:, 1:].notna().any(axis=1).sum() #don't include the index
     print(non_none_rows)
     percent_filled = (round(non_none_rows/tot_rows, 4))*100
+    if percent_filled == None:
+        percent_filled = 0
+
     print(f"% filled: {percent_filled}")
 
-    save_path = inner_folder + "\\" + f"B&B_{int(percent_filled)}%" + file_name
+    save_path = inner_folder + "\\" + f"B&B_{int(percent_filled)}%_" + file_name
     
     bb_mediapipe_df.to_csv(save_path)
 
@@ -92,4 +96,4 @@ def BB_extraction(csv_to_process, file_name, inner_folder, percentage_list, time
     #append to list of all percentages
     percentage_list.append(video_dict)
 
-process_folder(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\B&B Extraction\Test")
+process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Holistic\0.8 Detect 0.9 Track")
