@@ -1,7 +1,9 @@
 import pandas as pd
 import os
 
-'''Select and save csv of only Box and Blocks data from mediapipe outputs.
+'''
+
+Select and save csv of only Box and Blocks data from mediapipe outputs.
 
 CSV of start and stop times was collected by hand.
 
@@ -23,7 +25,7 @@ For single csv
 def process_folder(folder):
   
     #import the go and stop times csv as a data frame
-    go_stop_path = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\B&B Extraction\Test\TEST Go and Stop Times.xlsx" #this should be manually entered
+    go_stop_path = r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Go and Stop Times- Original Videos.xlsx" #this should be manually entered
     times_df = pd.read_excel(go_stop_path)
 
     parent_folder = os.listdir(folder)
@@ -46,11 +48,10 @@ def process_folder(folder):
     percentage_df = pd.DataFrame(percentage_list)
     avg_percentage = percentage_df['Percent Frames with Landmark'].mean()
     percentage_df.loc[0, "Average Percent Frames with Landmark"] = avg_percentage
-    save_path = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\B&B Extraction\Test\Percentage Filled.csv"
+    save_path = r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Hand Legacy\0.2d 0.7t\ Hand Legacy Percentage Filled 0.2d 0.7t.csv"
     #Save to csv file (can open in Excel)
     percentage_df.to_csv(save_path)
 
-  #Run with parallization
 percentage_list = []
 
 
@@ -73,7 +74,6 @@ def BB_extraction(csv_to_process, file_name, percentage_list, times_df):
 
     #modify dataframe to just include between start and stop frame
     mediapipe_df = mediapipe_df.iloc[start_frame - 1:stop_frame] #-1 to be inclusive of start_frame
-    print(mediapipe_df)
 
     #save percentage of rows with data to a csv
 
@@ -88,4 +88,4 @@ def BB_extraction(csv_to_process, file_name, percentage_list, times_df):
     #append to list of all percentages
     percentage_list.append(video_dict)
 
-process_folder(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\B&B Extraction\Test")
+process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Hand Legacy\0.2d 0.7t")
