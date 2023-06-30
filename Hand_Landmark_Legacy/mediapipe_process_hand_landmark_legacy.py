@@ -59,8 +59,8 @@ def process_video(video_to_process):
 
   '''
 
-  mindetect = 0.1
-  mintrack = 0.1
+  mindetect = 0.2
+  mintrack = 0.7
   numhands = 2
 
 
@@ -122,7 +122,7 @@ def process_video(video_to_process):
     all_keys.extend(handedness_keys)  
     all_keys.extend(cor_hand_keys)  
 
-    print(all_keys)
+    # print(all_keys)
 
     #Read through the video until it is finished
     
@@ -191,8 +191,8 @@ def process_video(video_to_process):
 
                 j += 1
           
-            #add the frame dictionary as a new sub-list to the total list
-            df_list.append(d_frame)
+        #add the frame dictionary as a new sub-list to the total list
+        df_list.append(d_frame)
 
         # #draw landmarks on the image
         annotated_frame = draw_landmarks_on_image(frame, hand_landmarker_result)
@@ -207,7 +207,7 @@ def process_video(video_to_process):
     print(f"tot col: {output_df.shape[1]}")
 
     #for labelling of files based on % of frames detected
-    non_none_rows = output_df.notna().any(axis=1).sum()
+    non_none_rows = output_df.iloc[:, 1:].notna().any(axis=1).sum()
     percent_filled = (round(non_none_rows/output_df.shape[0], 2))*100
     print(f"non-None row: {non_none_rows}")
     print(f"% data rows: {non_none_rows/output_df.shape[0]}")
@@ -245,4 +245,4 @@ def draw_landmarks_on_image(image, results):
   #   break
   return annotated_image
 
-process_video(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Legacy Test\test_video_2hand_left_first_3.mp4")
+process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Hand Legacy")
