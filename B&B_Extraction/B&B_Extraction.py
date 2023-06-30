@@ -73,15 +73,18 @@ def BB_extraction(csv_to_process, file_name, percentage_list, times_df):
     mediapipe_df = pd.read_csv(csv_to_process)
 
     #modify dataframe to just include between start and stop frame
-    mediapipe_df = mediapipe_df.iloc[start_frame - 1:stop_frame] #-1 to be inclusive of start_frame
+    bb_mediapipe_df = mediapipe_df.iloc[start_frame - 1:stop_frame] #-1 to be inclusive of start_frame
 
     #save percentage of rows with data to a csv
 
-    tot_rows = mediapipe_df.shape[0]
-    non_none_rows =mediapipe_df.iloc[:, 1:].notna().any(axis=1).sum() #don't include the index
+    tot_rows = bb_mediapipe_df.shape[0]
+    non_none_rows =bb_mediapipe_df.iloc[:, 1:].notna().any(axis=1).sum() #don't include the index
     print(non_none_rows)
     percent_filled = (round(non_none_rows/tot_rows, 2))*100
     print(f"% filled: {percent_filled}")
+
+    save_path = os.path.splitext(csv_to_process)[0] + "_B&B.csv"
+    bb_mediapipe_df.to_csv(save_path)
 
     #create dictionary for given video csv
     video_dict = {'Video Name': file_name, 'Percent Frames with Landmark': percent_filled, 'Total Frames': tot_rows, 'Frames with Landmark': non_none_rows}
