@@ -59,8 +59,8 @@ def process_video(video_to_process):
 
   '''
 
-  mindetect = 0.2
-  mintrack = 0.7
+  mindetect = 0.1
+  mintrack = 0.1
   numhands = 2
 
 
@@ -122,7 +122,7 @@ def process_video(video_to_process):
     all_keys.extend(handedness_keys)  
     all_keys.extend(cor_hand_keys)  
 
-    # print(all_keys)
+    print(all_keys)
 
     #Read through the video until it is finished
     
@@ -245,4 +245,4 @@ def draw_landmarks_on_image(image, results):
   #   break
   return annotated_image
 
-process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Hand Legacy")
+process_video(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Legacy Test\test_video_2hand_left_first_3.mp4")

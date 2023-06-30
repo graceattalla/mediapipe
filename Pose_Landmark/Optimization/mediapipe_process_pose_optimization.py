@@ -7,11 +7,29 @@ import cv2
 import os
 import pandas as pd
 import numpy as np
+from  joblib import Parallel, delayed
 
 model_path = r'C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Github\mediapipe\Pose_Landmark\pose_landmarker_heavy.task'
 
+def process_folder(folder):
+  parent_folder = os.listdir(folder)
+  vid_files = []
+
+  for inner in parent_folder:
+      inner_folder = os.path.join(folder, inner) #get full path to inner folder
+
+      if os.path.isdir(inner_folder): #check if it is a folder
+          inner_files = os.listdir(inner_folder)
+          full_file_paths = [os.path.join(inner_folder, file) for file in inner_files if ".mp4" in file]
+          vid_files.extend(full_file_paths)
+  print(f"vid_files: {vid_files}") #test
+
+  #Run with parallization
+  Parallel(n_jobs=-1, verbose=10)(delayed(process_video)(os.path.join(folder, file)) for file in vid_files)
+
+
 # Create a hand landmarker instance with the video mode:
-def process_video(video_to_process):
+def process_video(video_to_process, mindetect, minpres, mintrack):
 
   #CREATE THE TASK
   BaseOptions = mp.tasks.BaseOptions
@@ -35,9 +53,9 @@ def process_video(video_to_process):
 
   '''
 
-  mindetect = 0.8
-  minpres = 0.8
-  mintrack = 0.8
+  # mindetect = 0.8
+  # minpres = 0.8
+  # mintrack = 0.8
 
 
   options = PoseLandmarkerOptions(
@@ -114,7 +132,7 @@ def process_video(video_to_process):
 
         #run the task
         pose_landmarker_result = landmarker.detect_for_video(mp_image, frame_number)
-        # print(pose_landmarker_result)
+        print(pose_landmarker_result)
 
 
         # #set dictionary with all frame keys for each frame- reset for each frame
@@ -183,7 +201,7 @@ def process_video(video_to_process):
           
       else:
         break
-    # output_df = pd.DataFrame(df_list)
+    output_df = pd.DataFrame(df_list)
     # print(output_df.shape[0])
     # print(output_df.shape[1])
 
@@ -195,7 +213,7 @@ def process_video(video_to_process):
   outvid.release()
   cap.release()
 
-  return pose_landmarker_result
+  return pose_landmarker_result, output_df
 
 
 MARGIN = 10  # pixels
@@ -223,38 +241,30 @@ def draw_landmarks_on_image(rgb_image, detection_result): #taken directly from m
       solutions.drawing_styles.get_default_pose_landmarks_style())
   return annotated_image
 
-# def draw_landmarks_on_image(rgb_image, detection_result): #taken directly from mediapipe example code for hand landmark
-#   hand_landmarks_list = detection_result.hand_landmarks
-#   handedness_list = detection_result.handedness
-#   annotated_image = np.copy(rgb_image)
+def brute_force_optimization(video_to_process, mindetect, minpres, mintrack):
+  #brute force method...
+  opt_list = []
+  for mindetect in np.arange(0.1, 1.1, 0.1):
+    for minpres  in np.arange(0.1, 1.1, 0.1):
+      for mintrack  in np.arange(0.5, 1.1, 0.1):
+        output_df = process_video(video_to_process, mindetect, minpres, mintrack)[1]
+        tot_rows = output_df.shape[0]
+        non_none_rows = output_df.iloc[:, 1:].notna().any(axis=1).sum()
+        percent_filled = (round(non_none_rows/output_df.shape[0], 2))*100
+        print(f"tot row: {output_df.shape[0]}")
+        print(f"tot col: {output_df.shape[1]}")
+        print(f"detect: {mindetect}")
+        print(f"track: {mintrack}")
 
-#   # Loop through the detected hands to visualize.
-#   for idx in range(len(hand_landmarks_list)):
-#     hand_landmarks = hand_landmarks_list[idx]
-#     handedness = handedness_list[idx]
+        row_data = {'Percent Filled': percent_filled, 'Tot Rows': tot_rows, 'Non None Rows': non_none_rows,'Detect': mindetect, 'Presence': minpres, 'Track': mintrack}
+        opt_list.append(row_data)
 
-#     # Draw the hand landmarks.
-#     hand_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
-#     hand_landmarks_proto.landmark.extend([
-#       landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in hand_landmarks
-#     ])
-#     solutions.drawing_utils.draw_landmarks(
-#       annotated_image,
-#       hand_landmarks_proto,
-#       solutions.hands.HAND_CONNECTIONS,
-#       solutions.drawing_styles.get_default_hand_landmarks_style(),
-#       solutions.drawing_styles.get_default_hand_connections_style())
+  opt_df = pd.DataFrame(opt_list)
 
-#     # Get the top left corner of the detected hand's bounding box.
-#     height, width, _ = annotated_image.shape
-#     x_coordinates = [landmark.x for landmark in hand_landmarks]
-#     y_coordinates = [landmark.y for landmark in hand_landmarks]
-#     text_x = int(min(x_coordinates) * width)
-#     text_y = int(min(y_coordinates) * height) - MARGIN
 
-#     # Draw handedness (left or right hand) on the image.
-#     cv2.putText(annotated_image, f"{handedness[0].category_name}",
-#                 (text_x, text_y), cv2.FONT_HERSHEY_DUPLEX,
-#                 FONT_SIZE, HANDEDNESS_TEXT_COLOR, FONT_THICKNESS, cv2.LINE_AA)
+  save_opt_path = os.path.splitext(video_to_process)[0] + "_Optimization" + ".csv"
+  opt_df.to_csv(save_opt_path, index=False)
 
-#   return annotated_image
+video_to_process = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Hand Legacy\Rotated Videos\Optimization\P19_C_pre_preprocessed_6s.mp4"
+
+brute_force_optimization(video_to_process)
