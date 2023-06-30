@@ -18,5 +18,7 @@ min_detection_confidence = 0.6
 min_tracking_confidence = 0.9
 
 Hand Legacy:
-min_detection_confidence = 
-min_tracking_confidence = 
+min_detection_confidence = 0.2
+min_tracking_confidence = 0.7
+0.1-0.4d and 0.1-1t are all similar with very lower outputs. Track minorly impacts percentage by 2 %
+This is a bit of a guess.

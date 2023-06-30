@@ -1,3 +1,7 @@
+'''
+Model will output coordinates for all points, even if it was a very low "Presence" or "Visibility". Should only count as a valid point if it is above a certain threshold.
+'''
+
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
@@ -7,8 +11,26 @@ import cv2
 import os
 import pandas as pd
 import numpy as np
+from  joblib import Parallel, delayed
 
 model_path = r'C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Github\mediapipe\Pose_Landmark\pose_landmarker_heavy.task'
+
+def process_folder(folder):
+  parent_folder = os.listdir(folder)
+  vid_files = []
+
+  for inner in parent_folder:
+      inner_folder = os.path.join(folder, inner) #get full path to inner folder
+
+      if os.path.isdir(inner_folder): #check if it is a folder
+          inner_files = os.listdir(inner_folder)
+          full_file_paths = [os.path.join(inner_folder, file) for file in inner_files if ".mp4" in file]
+          vid_files.extend(full_file_paths)
+  print(f"vid_files: {vid_files}") #test
+
+  #Run with parallization
+  Parallel(n_jobs=-1, verbose=10)(delayed(process_video)(os.path.join(folder, file)) for file in vid_files)
+
 
 # Create a hand landmarker instance with the video mode:
 def process_video(video_to_process):
@@ -63,7 +85,7 @@ def process_video(video_to_process):
     print(f"Time (s): {total_frames/fps}")
 
     #Modified to save at same path for skeleton video (easier to keep organized)
-    pathvid = os.path.splitext(video_to_process)[0] + '_skeleton.mp4' #Add _skeleton to video name
+    pathvid = os.path.splitext(video_to_process)[0] + f'_{mindetect}d_{minpres}p_{mintrack}t_skeleton.mp4' #Add _skeleton to video name
     outvid = cv2.VideoWriter(pathvid,fourcc,fps,(int(width),int(height)))
     
     #Check if the camera opened successfully
@@ -78,24 +100,18 @@ def process_video(video_to_process):
     df_list = []
     cor_keys = []
     all_keys = []
-    hands = ["Right", "Left"]
-    cor_type = ["Image", "World"]
+    cor_type = ["Normalized", "World"]
     information = ["x", "y", "z", "Visibility", "Presence"]
 
     #setting the column names for the coordinates
     for type in cor_type:
-        for r_l in hands:
-            for i in range(1, 22):
-                for info in information:
-                    cor_keys.append(f"{info} {type} {i} {r_l}")
+          for i in range(0, 33):
+              for info in information:
+                  cor_keys.append(f"{info} {type} {i}")
 
-    #setting the column names for the handedness
-    handedness_keys = ["Index Right", "Score Right", "Display Name Right", "Category Name Right", 
-                        "Index Left", "Score Left", "Display Name Left", "Category Name Left"]
-
-    all_keys.extend(handedness_keys)
     all_keys.extend(cor_keys)  
-        
+
+    i = 1
     #Read through the video until it is finished
     while(cap.isOpened()):
       #Capture each frame-by-frame
@@ -114,67 +130,39 @@ def process_video(video_to_process):
 
         #run the task
         pose_landmarker_result = landmarker.detect_for_video(mp_image, frame_number)
-        # print(pose_landmarker_result)
 
 
-        # #set dictionary with all frame keys for each frame- reset for each frame
-        # d_frame = {key: None for key in all_keys}
+        #set dictionary with all frame keys for each frame- reset for each frame
+        d_frame = {key: None for key in all_keys}
 
-        # #loop through total number of hands and all points for given frame
-        # #although this is a little redundant, it accounts for issues when there is no data for a certain point and leave it as None
-        # for hand, hand_i, hand_w in zip(hand_landmarker_result.handedness, hand_landmarker_result.hand_landmarks, hand_landmarker_result.hand_world_landmarks):
-        #   if hand[0].display_name == "Right":
-        #     d_frame["Index Right"] = hand[0].index
-        #     d_frame["Score Right"] = hand[0].score
-        #     d_frame["Display Name Right"] = hand[0].display_name
-        #     d_frame["Category Name Right"] = hand[0].category_name
+        #loop through total number of hands and all points for given frame
+        #although this is a little redundant, it accounts for issues when there is no data for a certain point and leave it as None
+        #landmark 15-22 are hand and wrist landmarks (0-32 landmarks total)
+        j = 0
+        for pose_n, pose_w in zip(pose_landmarker_result.pose_landmarks, pose_landmarker_result.pose_world_landmarks):
+          for point_n, point_w in zip(pose_n, pose_w):
+            if i == 1:
+              print(pose_n)
+              i = 0
+            # print(j)
+            j_str = str(j)
+            if j in range(15,23): #only save the hand related landmarks
+              d_frame["x Normalized " + j_str] = point_n.x
+              d_frame["y Normalized " + j_str] = point_n.y
+              d_frame["z Normalized " + j_str] = point_n.z
+              d_frame["Visibility Normalized " + j_str] = point_n.visibility
+              d_frame["Presence Normalized " + j_str] = point_n.presence
 
-        #     #loop for points in the image and the world coordinates
-        #     j = 1
-        #     for point_i, point_w in zip(hand_i, hand_w):
-        #       j_str = str(j)
+              d_frame["x World " + j_str] = point_w.x
+              d_frame["y World " + j_str] = point_w.y
+              d_frame["z World " + j_str] = point_w.z
+              d_frame["Visibility World " + j_str] = point_w.visibility
+              d_frame["Presence World " + j_str] = point_w.presence
 
-        #       d_frame["x Image " + j_str + " Right"] = point_i.x
-        #       d_frame["y Image " + j_str + " Right"] = point_i.y
-        #       d_frame["z Image " + j_str + " Right"] = point_i.z
-        #       d_frame["Visibility Image " + j_str + " Right"] = point_i.visibility
-        #       d_frame["Presence Image " + j_str + " Right"] = point_i.presence
-
-        #       d_frame["x World " + j_str + " Right"] = point_w.x
-        #       d_frame["y World " + j_str + " Right"] = point_w.y
-        #       d_frame["z World " + j_str + " Right"] = point_w.z
-        #       d_frame["Visibility World " + j_str + " Right"] = point_w.visibility
-        #       d_frame["Presence World " + j_str + " Right"] = point_w.presence
-
-        #       j += 1
-
-        #   if hand[0].display_name == "Left":
-        #     d_frame["Index Left"] = hand[0].index
-        #     d_frame["Score Left"] = hand[0].score
-        #     d_frame["Display Name Left"] = hand[0].display_name
-        #     d_frame["Category Name Left"] = hand[0].category_name
-
-        #     #loop for points in the image and the world coordinate
-        #     j = 1
-        #     for point_i, point_w in zip(hand_i, hand_w):
-        #       j_str = str(j)
-
-        #       d_frame["x Image " + j_str + " Left"] = point_i.x
-        #       d_frame["y Image " + j_str + " Left"] = point_i.y
-        #       d_frame["z Image " + j_str + " Left"] = point_i.z
-        #       d_frame["Visibility Image " + j_str + " Left"] = point_i.visibility
-        #       d_frame["Presence World " + j_str + " Left"] = point_i.presence
-
-        #       d_frame["x World " + j_str + " Left"] = point_w.x
-        #       d_frame["y World " + j_str + " Left"] = point_w.y
-        #       d_frame["z World " + j_str + " Left"] = point_w.z
-        #       d_frame["Visibility Image " + j_str + " Left"] = point_w.visibility
-        #       d_frame["Presence World " + j_str + " Left"] = point_w.presence
-
-        #       j += 1
+            j += 1
           
-        #   #add the frame dictionary as a new sub-list to the total list
-        #   df_list.append(d_frame)
+          #add the frame dictionary as a new sub-list to the total list
+          df_list.append(d_frame)
 
         # #draw landmarks on the image
         annotated_frame = draw_landmarks_on_image(frame, pose_landmarker_result)
@@ -183,14 +171,19 @@ def process_video(video_to_process):
           
       else:
         break
-    # output_df = pd.DataFrame(df_list)
-    # print(output_df.shape[0])
-    # print(output_df.shape[1])
+    output_df = pd.DataFrame(df_list)
+    print(output_df)
+    print(output_df.shape[0])
+    print(output_df.shape[1])
 
-  # #Get path to save file (splits at the "." to remove the ".mp4" then adds ".csv")
-  # save_path = os.path.splitext(video_to_process)[0] + ".csv"
-  # #Save to csv file (can open in Excel)
-  # output_df.to_csv(save_path)
+    #for labelling of files based on % of frames detected
+    non_none_rows = output_df.notna().any(axis=1).sum()
+    percent_filled = (round(non_none_rows/output_df.shape[0], 2))*100
+
+  #Get path to save file (splits at the "." to remove the ".mp4" then adds ".csv")
+  save_path = os.path.splitext(video_to_process)[0] + f"_{mindetect}d_{minpres}p_{mintrack}t_{percent_filled}%.csv"
+  #Save to csv file (can open in Excel)
+  output_df.to_csv(save_path)
 
   outvid.release()
   cap.release()
@@ -222,39 +215,3 @@ def draw_landmarks_on_image(rgb_image, detection_result): #taken directly from m
       solutions.pose.POSE_CONNECTIONS,
       solutions.drawing_styles.get_default_pose_landmarks_style())
   return annotated_image
-
-# def draw_landmarks_on_image(rgb_image, detection_result): #taken directly from mediapipe example code for hand landmark
-#   hand_landmarks_list = detection_result.hand_landmarks
-#   handedness_list = detection_result.handedness
-#   annotated_image = np.copy(rgb_image)
-
-#   # Loop through the detected hands to visualize.
-#   for idx in range(len(hand_landmarks_list)):
-#     hand_landmarks = hand_landmarks_list[idx]
-#     handedness = handedness_list[idx]
-
-#     # Draw the hand landmarks.
-#     hand_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
-#     hand_landmarks_proto.landmark.extend([
-#       landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in hand_landmarks
-#     ])
-#     solutions.drawing_utils.draw_landmarks(
-#       annotated_image,
-#       hand_landmarks_proto,
-#       solutions.hands.HAND_CONNECTIONS,
-#       solutions.drawing_styles.get_default_hand_landmarks_style(),
-#       solutions.drawing_styles.get_default_hand_connections_style())
-
-#     # Get the top left corner of the detected hand's bounding box.
-#     height, width, _ = annotated_image.shape
-#     x_coordinates = [landmark.x for landmark in hand_landmarks]
-#     y_coordinates = [landmark.y for landmark in hand_landmarks]
-#     text_x = int(min(x_coordinates) * width)
-#     text_y = int(min(y_coordinates) * height) - MARGIN
-
-#     # Draw handedness (left or right hand) on the image.
-#     cv2.putText(annotated_image, f"{handedness[0].category_name}",
-#                 (text_x, text_y), cv2.FONT_HERSHEY_DUPLEX,
-#                 FONT_SIZE, HANDEDNESS_TEXT_COLOR, FONT_THICKNESS, cv2.LINE_AA)
-
-#   return annotated_image

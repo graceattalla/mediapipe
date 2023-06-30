@@ -263,4 +263,4 @@ def draw_landmarks_on_image(rgb_image, detection_result): #taken directly from m
 
   return annotated_image
 
-process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Hand")
+process_folder(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Legacy Test")

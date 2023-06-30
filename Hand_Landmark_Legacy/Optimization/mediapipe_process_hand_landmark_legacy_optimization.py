@@ -17,6 +17,28 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
+def draw_landmarks_on_image(image, results):
+  image.flags.writeable = True
+  # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+  annotated_image = np.copy(image)
+  if results.multi_hand_landmarks != None:
+    for hand_landmarks in results.multi_hand_landmarks:
+        mp_drawing.draw_landmarks(
+            annotated_image, hand_landmarks, mp_hands.HAND_CONNECTIONS,
+            mp_drawing_styles.get_default_hand_landmarks_style(),
+            mp_drawing_styles.get_default_hand_connections_style())
+  # mp_drawing.draw_landmarks(
+  #   annotated_image,
+  #   results.multi_hand_landmarks,
+  #   mp_hands.HAND_CONNECTIONS,
+  #   landmark_drawing_spec=mp_drawing_styles
+  #   .get_default_hand_landmarks_style())
+  # # Flip the image horizontally for a selfie-view display.
+  # cv2.imshow('MediaPipe Holistic', cv2.flip(image, 1))
+  # if cv2.waitKey(5) & 0xFF == 27:
+  #   break
+  return annotated_image
+
 def process_folder(folder):
   parent_folder = os.listdir(folder)
   vid_files = []
@@ -35,7 +57,7 @@ def process_folder(folder):
 
 # Create a hand landmarker instance with the video mode:
 #take in mindetect and mintrack to optimize
-def process_video(video_to_process):
+def process_video(video_to_process, mindetect, mintrack):
 
   #CREATE THE TASK
   BaseOptions = mp.tasks.BaseOptions
@@ -59,9 +81,9 @@ def process_video(video_to_process):
 
   '''
 
-  mindetect = 0.1
-  mintrack = 0.1
-  numhands = 2
+  # mindetect = 0.1
+  # mintrack = 0.1
+  numhands = 1
 
 
   # options = PoseLandmarkerOptions(
@@ -122,7 +144,7 @@ def process_video(video_to_process):
     all_keys.extend(handedness_keys)  
     all_keys.extend(cor_hand_keys)  
 
-    print(all_keys)
+    # print(all_keys)
 
     #Read through the video until it is finished
     
@@ -221,28 +243,32 @@ def process_video(video_to_process):
   outvid.release()
   cap.release()
 
-  return hand_landmarker_result
+  return hand_landmarker_result, output_df
 
-def draw_landmarks_on_image(image, results):
-  image.flags.writeable = True
-  # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-  annotated_image = np.copy(image)
-  if results.multi_hand_landmarks != None:
-    for hand_landmarks in results.multi_hand_landmarks:
-        mp_drawing.draw_landmarks(
-            annotated_image, hand_landmarks, mp_hands.HAND_CONNECTIONS,
-            mp_drawing_styles.get_default_hand_landmarks_style(),
-            mp_drawing_styles.get_default_hand_connections_style())
-  # mp_drawing.draw_landmarks(
-  #   annotated_image,
-  #   results.multi_hand_landmarks,
-  #   mp_hands.HAND_CONNECTIONS,
-  #   landmark_drawing_spec=mp_drawing_styles
-  #   .get_default_hand_landmarks_style())
-  # # Flip the image horizontally for a selfie-view display.
-  # cv2.imshow('MediaPipe Holistic', cv2.flip(image, 1))
-  # if cv2.waitKey(5) & 0xFF == 27:
-  #   break
-  return annotated_image
+def brute_force_optimization(video_to_process):
+  #brute force method...
+  opt_list = []
+  for mindetect in np.arange(0.1, 1.1, 0.1):
+    for mintrack  in np.arange(0.1, 1.1, 0.1):
+      output_df = process_video(video_to_process, mindetect, mintrack)[1]
+      tot_rows = output_df.shape[0]
+      non_none_rows = output_df.iloc[:, 1:].notna().any(axis=1).sum()
+      percent_filled = (round(non_none_rows/output_df.shape[0], 2))*100
+      print(f"tot row: {output_df.shape[0]}")
+      print(f"tot col: {output_df.shape[1]}")
+      print(f"detect: {mindetect}")
+      print(f"track: {mintrack}")
 
-process_video(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Legacy Test\test_video_2hand_left_first_3.mp4")
+      row_data = {'Percent Filled': percent_filled, 'Tot Rows': tot_rows, 'Non None Rows': non_none_rows,'Detect': mindetect, 'Track': mintrack}
+      opt_list.append(row_data)
+
+  opt_df = pd.DataFrame(opt_list)
+
+
+  save_opt_path = os.path.splitext(video_to_process)[0] + "_Optimization" + ".csv"
+  opt_df.to_csv(save_opt_path, index=False)
+
+video_to_process = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Hand Legacy\Rotated Videos\Optimization\P19_C_pre_preprocessed_6s.mp4"
+brute_force_optimization(video_to_process)
+
+# process_video(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Hand Legacy\Rotated Videos\Optimization\P19_C_pre_preprocessed_6s")
