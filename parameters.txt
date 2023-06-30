@@ -4,9 +4,9 @@ With the Hand Landmark model, various optimization algorithms were attemtempted 
 For other models, approximate optimization with different sample videos was used.
 
 Hand Landmark:
-min_hand_detection_confidence =
-min_hand_presence_confidence =
-min_tracking_confidence =
+min_hand_detection_confidence = 0.1
+min_hand_presence_confidence = 0.5
+min_tracking_confidence = 1
 
 Pose:
 min_pose_detection_confidence =
@@ -18,5 +18,7 @@ min_detection_confidence = 0.6
 min_tracking_confidence = 0.9
 
 Hand Legacy:
-min_detection_confidence = 
-min_tracking_confidence = 
+min_detection_confidence = 0.2
+min_tracking_confidence = 0.7
+0.1-0.4d and 0.1-1t are all similar with very lower outputs. Track minorly impacts percentage by 2 %
+This is a bit of a guess.
