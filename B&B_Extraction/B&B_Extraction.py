@@ -49,7 +49,7 @@ def process_folder(folder):
     percentage_df = pd.DataFrame(percentage_list)
     avg_percentage = percentage_df['Percent Frames with Landmark'].mean()
     percentage_df.loc[0, "Average Percent Frames with Landmark"] = avg_percentage
-    save_path = r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Holistic\0.8 Detect 0.9 Track\Holistic Percentage Filled 0.8d 0.9t.csv"
+    save_path = r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Hand\0.1d 0.5p 0.7t\Hand Percentage Filled 0.1d 0.5p 0.7t.csv"
     #Save to csv file (can open in Excel)
     percentage_df.to_csv(save_path)
 
@@ -96,4 +96,4 @@ def BB_extraction(csv_to_process, file_name, inner_folder, percentage_list, time
     #append to list of all percentages
     percentage_list.append(video_dict)
 
-process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Holistic\0.8 Detect 0.9 Track")
+process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Hand\0.1d 0.5p 0.7t")

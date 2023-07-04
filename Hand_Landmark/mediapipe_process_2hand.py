@@ -57,7 +57,7 @@ def process_video(video_to_process):
   numhands = 1
   mindetect = 0.1
   minpres = 0.5
-  mintrack = 1
+  mintrack = 0.7
 
 
   options = HandLandmarkerOptions(
@@ -206,7 +206,7 @@ def process_video(video_to_process):
     print(output_df.shape[1])
 
         #for labelling of files based on % of frames detected
-    non_none_rows = output_df.notna().any(axis=1).sum()
+    non_none_rows = output_df.iloc[:, 1:].notna().any(axis=1).sum()
     percent_filled = (round(non_none_rows/output_df.shape[0], 2))*100
     print(f"non-None row: {non_none_rows}")
     print(f"% data rows: {non_none_rows/output_df.shape[0]}")
@@ -263,4 +263,4 @@ def draw_landmarks_on_image(rgb_image, detection_result): #taken directly from m
 
   return annotated_image
 
-process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Hand\0.1d 0.5p 1.0t")
+process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Hand\0.1d 0.5p 0.7t")
