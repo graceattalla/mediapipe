@@ -25,7 +25,7 @@ For single csv
 def process_folder(folder):
   
     #import the go and stop times csv as a data frame
-    go_stop_path = r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Go and Stop Times- Original Videos.xlsx" #this should be manually entered
+    go_stop_path = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\B&B Extraction\Test\TEST Go and Stop Times.xlsx" #this should be manually entered
     times_df = pd.read_excel(go_stop_path)
 
     parent_folder = os.listdir(folder)
@@ -37,14 +37,21 @@ def process_folder(folder):
 
         if os.path.isdir(inner_folder): #check if it is a folder
             inner_files = os.listdir(inner_folder)
+            total_percent_participant = 0
+            num_files = 0
+
             for file in inner_files:
                 if ".csv" in file:
                     if "B&B" not in file:
-                        print(file)
                         full_file_path = os.path.join(inner_folder, file)
-                        BB_extraction(full_file_path, file, inner_folder, percentage_list, times_df)
+                        percent_filled = BB_extraction(full_file_path, file, inner_folder, percentage_list, times_df)
+                        total_percent_participant += percent_filled
+                        num_files +=1
                         # full_file_paths = [os.path.join(inner_folder, file) for file in inner_files if ".csv" in file] #get a list of all the mediapipe csv files
                         # sheet_files.extend(full_file_paths)
+            average_participant_percent = total_percent_participant/num_files
+            #figure out a way to include average participant percent in the spreadsheet...
+                
 
     percentage_df = pd.DataFrame(percentage_list)
     avg_percentage = percentage_df['Percent Frames with Landmark'].mean()
@@ -71,10 +78,13 @@ def BB_extraction(csv_to_process, file_name, inner_folder, percentage_list, time
     stop_frame = int(stop_time*fps + 1) 
 
     #import the mediapipe csv as a data frame
-    mediapipe_df = pd.read_csv(csv_to_process)
+    mediapipe_df = pd.read_csv(csv_to_process, index_col=0)
+    print(mediapipe_df)
 
     #modify dataframe to just include between start and stop frame
     bb_mediapipe_df = mediapipe_df.iloc[start_frame - 1:stop_frame] #-1 to be inclusive of start_frame
+    print(bb_mediapipe_df)
+
 
     #save percentage of rows with data to a csv
 
@@ -95,5 +105,6 @@ def BB_extraction(csv_to_process, file_name, inner_folder, percentage_list, time
     video_dict = {'Video Name': file_name, 'Percent Frames with Landmark': percent_filled, 'Total Frames': tot_rows, 'Frames with Landmark': non_none_rows}
     #append to list of all percentages
     percentage_list.append(video_dict)
+    return percent_filled #use this to calculate average for each participant
 
 process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Hand\0.1d 0.5p 0.7t")
