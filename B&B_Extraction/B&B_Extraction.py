@@ -25,7 +25,7 @@ For single csv
 def process_folder(folder):
   
     #import the go and stop times csv as a data frame
-    go_stop_path = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\B&B Extraction\Test\TEST Go and Stop Times.xlsx" #this should be manually entered
+    go_stop_path = r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Go and Stop Times- Original Videos.xlsx" #this should be manually entered
     times_df = pd.read_excel(go_stop_path)
 
     parent_folder = os.listdir(folder)
@@ -79,18 +79,14 @@ def BB_extraction(csv_to_process, file_name, inner_folder, percentage_list, time
 
     #import the mediapipe csv as a data frame
     mediapipe_df = pd.read_csv(csv_to_process, index_col=0)
-    print(mediapipe_df)
 
     #modify dataframe to just include between start and stop frame
     bb_mediapipe_df = mediapipe_df.iloc[start_frame - 1:stop_frame] #-1 to be inclusive of start_frame
-    print(bb_mediapipe_df)
-
 
     #save percentage of rows with data to a csv
 
     tot_rows = bb_mediapipe_df.shape[0]
     non_none_rows =bb_mediapipe_df.iloc[:, 1:].notna().any(axis=1).sum() #don't include the index
-    print(non_none_rows)
     percent_filled = (round(non_none_rows/tot_rows, 4))*100
     if percent_filled == None:
         percent_filled = 0
