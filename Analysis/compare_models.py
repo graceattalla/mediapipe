@@ -146,18 +146,34 @@ def allvideos_model_diff(folder): #Folder should contain 2 models to compare. Fo
     plt.show()
 
 #Bar chart of number of participant pairs (pre and post) both with percentage of frames with landmarks above threshold of 30%
+#Assumes th
+
 
 #Loop through row of csv and determine if there is a pair.
 #Determine if both of the pairs are above the threshold.
 #If so, add to a counter.
 
-def pair_threshold(file_path): #file to analyze
+def pair_threshold(file_path):
     data=pd.read_excel(file_path, index_col=0)
-    for 
+    prev_name = ''
+    prev_name_split = []
+    for index, row in data.iterrows():
+        cur_name = row['Video Name'] #e.g. P01_A_post_preprocessed_0.2d_0.7t_9.0%.csv
+        cur_name_split = cur_name.split('_') #e.g., ['P01', 'A', 'post', 'preprocessed', '0.2d', '0.7t', '9.0%.csv']
+        #Need to deal with first iteration
+        if (cur_name_split[0] == prev_name_split[0]) and (cur_name_split[1] == prev_name_split[1]): #checks if same participant and trial
+            if 
+        print(cur_name_split)
+        prev_name = cur_name
+        prev_name_split = cur_name_split
+        #need to get participant, A/B/C, pre/post. Save this in a list
+        # print(row['Video Name'])
+
+pair_threshold(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\B&B % Frames\Model B&B %\Hand Models\Hand Legacy Percentage Filled 0.2d 0.7t Part. Avg.xlsx")
 
 
 folder = r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\B&B % Frames"
 # threshol_subplot(folder, [30, 40, 50, 60])
 # graph_folder_allvideos_subplot(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\B&B % Frames")
 # graph_folder_avgparticipant_subplot(folder)
-allvideos_model_diff(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\B&B % Frames\Model B&B %\Hand Models")
+# allvideos_model_diff(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\B&B % Frames\Model B&B %\Hand Models")
