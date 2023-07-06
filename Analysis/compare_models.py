@@ -146,7 +146,10 @@ def allvideos_model_diff(folder): #Folder should contain 2 models to compare. Fo
     plt.show()
 
 #Bar chart of number of participant pairs (pre and post) both with percentage of frames with landmarks above threshold of 30%
-#Assumes th
+#Assumes that the spreadsheet is in order of participant trials. E.g., 01 first with all pre and post back to back.
+
+#To Do:
+# Finish checking if pre and post are in prev and cur. Count if so.
 
 
 #Loop through row of csv and determine if there is a pair.
@@ -162,7 +165,8 @@ def pair_threshold(file_path):
         cur_name_split = cur_name.split('_') #e.g., ['P01', 'A', 'post', 'preprocessed', '0.2d', '0.7t', '9.0%.csv']
         #Need to deal with first iteration
         if (cur_name_split[0] == prev_name_split[0]) and (cur_name_split[1] == prev_name_split[1]): #checks if same participant and trial
-            if 
+            #if one is pre and one is post
+            pass
         print(cur_name_split)
         prev_name = cur_name
         prev_name_split = cur_name_split

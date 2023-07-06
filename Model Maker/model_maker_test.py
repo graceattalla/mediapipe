@@ -1,0 +1,1 @@
+from mediapipe_model_maker import gesture_recognizer
