@@ -86,8 +86,8 @@ def threshold(folder, threshold):
     plt.title(f"Num Videos Above {threshold}% by Model")
     plt.show()
 
-#Bar charts of number of participants with percentage of frames with landmarks above different thresholds
-def threshold_subplot(folder, thres): #threshold is a list
+#Bar charts of number of videos with percentage of frames with landmarks above different thresholds
+def threshold_multithres(folder, thres): #threshold is a list
     parent_folder = os.listdir(folder)
     fig, axs = plt.subplots(len(thres), 1, figsize=(14, len(thres)*3), tight_layout=True)
     i = 0
@@ -104,14 +104,94 @@ def threshold_subplot(folder, thres): #threshold is a list
                 x.append(file_name)
                 y.append(greater)
         axs[i].bar(x,y)
-        axs[i].set_title(f" Above {thres}% {file_name}")
+        axs[i].set_title(f" Above {thres}%")
         axs[i].set_ylabel(f"Num Above {thres}%")
         i += 1
 
     fig.suptitle('Num Videos Above Thresholds by Model', fontsize=16)
 
     fig_manager = plt.get_current_fig_manager()
-    fig_manager.window.title('Num Frames with Landmark Percent Above Thresholds')
+    fig_manager.window.title('Num Videos with Landmark Percent Above Thresholds')
+    plt.show()
+
+#Number of pairs of videos with pre & post both above threshold.
+#To Do:
+#- change to total num videos like multithres below
+def pair_threshold(folder, thres):
+    parent_folder = os.listdir(folder)
+    x = []
+    y = []
+    for file in parent_folder:
+        if ".xlsx" in file:
+            file_path = os.path.join(folder, file)
+            file_name = os.path.splitext(file)[0]
+            data=pd.read_excel(file_path, index_col=0)
+            prev_name = ''
+            prev_name_split = [None, None, None] #initializing list of 3 for first loop
+            pairs_greater = 0 #the number of pairs that have a percent above the threshold provided
+            for index, row in data.iterrows(): #row is the current row
+                cur_percent = row["Percent Frames with Landmark"]
+                cur_name = row['Video Name'] #e.g. P01_A_post_preprocessed_0.2d_0.7t_9.0%.csv
+                cur_name_split = cur_name.split('_') #e.g., ['P01', 'A', 'post', 'preprocessed', '0.2d', '0.7t', '9.0%.csv']
+                #Need to deal with first iteration
+                if (cur_name_split[0] == prev_name_split[0]) and (cur_name_split[1] == prev_name_split[1]): #checks if same participant and trial- if both true then must be pre and post
+                    #if one is pre and one is post
+                    if ((cur_percent > thres) and (prev_percent > thres)):
+                        pairs_greater += 1
+                prev_percent = row["Percent Frames with Landmark"]
+                prev_name = cur_name
+                prev_name_split = cur_name_split
+            x.append(file_name)
+            y.append(pairs_greater)
+            print(pairs_greater)
+    sns.barplot(x=x, y=y)
+    plt.xlabel("Model")
+    plt.ylabel(f"Num Pair Videos (Pre & Post) Greater Than {thres}%")
+    plt.title(f"Num Pair Videos (Pre & Post) Above {thres}% by Model")
+    plt.show()
+            #need to get participant, A/B/C, pre/post. Save this in a list
+            # print(row['Video Name'])
+
+#Bar charts of number of videos (where pre/post pair is also above threshold) with percentage of frames with landmarks above different thresholds
+#All files should be in the same folder
+def pair_threshold_multithres(folder, thres): #threshold is a list
+    parent_folder = os.listdir(folder)
+    fig, axs = plt.subplots(len(thres), 1, figsize=(14, len(thres)*3), tight_layout=True)
+    i = 0
+    for thres in thres:
+        x = []
+        y = []
+        for file in parent_folder:
+            if ".xlsx" in file:
+                file_path = os.path.join(folder, file)
+                file_name = os.path.splitext(file)[0]
+                data=pd.read_excel(file_path, index_col=0)
+                prev_name = ''
+                prev_name_split = [None, None, None] #initializing list of 3 for first loop
+                vids_greater = 0 #the number of videos that have a percent above the threshold provided given both pairs above threshold
+                for index, row in data.iterrows(): #row is the current row
+                    cur_percent = row["Percent Frames with Landmark"]
+                    cur_name = row['Video Name'] #e.g. P01_A_post_preprocessed_0.2d_0.7t_9.0%.csv
+                    cur_name_split = cur_name.split('_') #e.g., ['P01', 'A', 'post', 'preprocessed', '0.2d', '0.7t', '9.0%.csv']
+                    #Need to deal with first iteration
+                    if (cur_name_split[0] == prev_name_split[0]) and (cur_name_split[1] == prev_name_split[1]): #checks if same participant and trial- if both true then must be pre and post
+                        #if one is pre and one is post
+                        if ((cur_percent > thres) and (prev_percent > thres)):
+                            vids_greater += 2
+                    prev_percent = row["Percent Frames with Landmark"]
+                    prev_name = cur_name
+                    prev_name_split = cur_name_split
+                x.append(file_name)
+                y.append(vids_greater)
+        axs[i].bar(x,y)
+        axs[i].set_title(f"Above {thres}%")
+        axs[i].set_ylabel(f"Num Vids Above {thres}%")
+        i += 1
+
+    fig.suptitle('Num Videos Pre & Post Both Above Thresholds by Model', fontsize=16)
+
+    fig_manager = plt.get_current_fig_manager()
+    fig_manager.window.title('Num Videos Pre & Post Both with Landmark Percent Above Thresholds')
     plt.show()
 
 #Plot difference between hand model percentage for every video.
@@ -156,24 +236,7 @@ def allvideos_model_diff(folder): #Folder should contain 2 models to compare. Fo
 #Determine if both of the pairs are above the threshold.
 #If so, add to a counter.
 
-def pair_threshold(file_path):
-    data=pd.read_excel(file_path, index_col=0)
-    prev_name = ''
-    prev_name_split = []
-    for index, row in data.iterrows():
-        cur_name = row['Video Name'] #e.g. P01_A_post_preprocessed_0.2d_0.7t_9.0%.csv
-        cur_name_split = cur_name.split('_') #e.g., ['P01', 'A', 'post', 'preprocessed', '0.2d', '0.7t', '9.0%.csv']
-        #Need to deal with first iteration
-        if (cur_name_split[0] == prev_name_split[0]) and (cur_name_split[1] == prev_name_split[1]): #checks if same participant and trial
-            #if one is pre and one is post
-            pass
-        print(cur_name_split)
-        prev_name = cur_name
-        prev_name_split = cur_name_split
-        #need to get participant, A/B/C, pre/post. Save this in a list
-        # print(row['Video Name'])
-
-pair_threshold(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\B&B % Frames\Model B&B %\Hand Models\Hand Legacy Percentage Filled 0.2d 0.7t Part. Avg.xlsx")
+pair_threshold_multithres(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\B&B % Frames\Model B&B %\All Models (copies)", [30, 40, 50, 60])
 
 
 folder = r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\B&B % Frames"
