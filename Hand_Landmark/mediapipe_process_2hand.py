@@ -44,7 +44,8 @@ def process_video(video_to_process):
   min_hand_presence_confidence
   The minimum confidence score for the hand presence score in the hand landmark detection model. 
   In Video mode and Live stream mode, if the hand presence confidence score from the hand landmark model is below this threshold, 
-  Hand Landmarker triggers the palm detection model. Otherwise, a lightweight hand tracking algorithm determines the location of the hand(s) for subsequent landmark detections.	
+  Hand Landmarker triggers the palm detection model. Otherwise, a lightweight hand tracking algorithm determines the location of the hand(s) for 
+  subsequent landmark detections.	
 
   min_tracking_confidence
   The minimum confidence score for the hand tracking to be considered successful. 
