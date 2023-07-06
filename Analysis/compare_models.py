@@ -162,7 +162,7 @@ def pair_threshold(file_path):
         cur_name_split = cur_name.split('_') #e.g., ['P01', 'A', 'post', 'preprocessed', '0.2d', '0.7t', '9.0%.csv']
         #Need to deal with first iteration
         if (cur_name_split[0] == prev_name_split[0]) and (cur_name_split[1] == prev_name_split[1]): #checks if same participant and trial
-            if 
+            pass
         print(cur_name_split)
         prev_name = cur_name
         prev_name_split = cur_name_split
