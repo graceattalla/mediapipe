@@ -124,9 +124,6 @@ def combine_outputs(file1, file2): #two files for same video but from different 
 
                     if d_frame[match_key] != None: #has not been filled already by file 1
                         d_frame[match_key] = value
-                    print(f"header: {header}")
-                    print(f"match key: {match_key}")
-                    print(d_frame[match_key])
                 else: #nothing detected
                     d_frame["Holistic Right"] = 0
         df_list.append(d_frame)
