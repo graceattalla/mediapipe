@@ -17,6 +17,7 @@ import re
 def combine_outputs_folder(folder1, folder2, combined_save_path): #these should be the parent folders for two different models. Assume folder1 will take preference if data for frame in both.
     parent_folder1 = os.listdir(folder1)
     parent_folder2 = os.listdir(folder2)
+    df_list = []
     for (inner1, inner2) in zip(parent_folder1, parent_folder2): #inner folders are participant folders. Assumed participant folders in same order for both folders.
         participant1 = os.path.basename(inner1)
         participant2 = os.path.basename(inner2)
@@ -39,7 +40,26 @@ def combine_outputs_folder(folder1, folder2, combined_save_path): #these should 
                         file1_path = os.path.join(inner1_full, file1)
                         file2_path = os.path.join(inner2_full, file2)
                         # print(file1_path, file2_path)
-                        combine_outputs(file1_path, file2_path, participant1, combined_full_save_path)
+                        output = combine_outputs(file1_path, file2_path, participant1, combined_full_save_path)
+                        base_name = output[0]
+                        new_percent = output[1] #percentage of combined rows filled
+                        percent1 = output[2] #original percentage rows filled of first file
+                        percent2 = output[3]
+
+                        d_file = {}
+                        d_file["File Name"] = base_name
+                        d_file["Combined %"] = new_percent
+                        d_file["File 1 %"] = percent1
+                        d_file["File 2 %"] = percent2
+
+                        gained_percent = new_percent - max(percent1, percent2)
+                        d_file["Gained & %"] = gained_percent
+
+                        df_list.append(d_file)
+    output_df = pd.DataFrame(df_list)
+    output_df.to_csv(combined_save_path + "\Combined Percent Comparison.csv")
+
+                        #need to save the filename, percent of new, percent of 2 olds. Need to return percents from the function then 
 
 
 def combine_outputs(file1, file2, participant, combined_full_save_path): #two files for same video but from different models. Assumes 1 is hand and 2 is holistic
@@ -128,7 +148,7 @@ def combine_outputs(file1, file2, participant, combined_full_save_path): #two fi
                 else: #nothing detected
                     d_frame["Holistic Right"] = 0
         df_list.append(d_frame)
-        print(master_index)
+        # print(master_index)
     output_df = pd.DataFrame(df_list)
 
     non_none_rows = output_df.iloc[:, 6:].notna().any(axis=1).sum()
@@ -138,8 +158,13 @@ def combine_outputs(file1, file2, participant, combined_full_save_path): #two fi
 
     base_name = extract_file_name(file1)
 
+    percent1 = extract_percent(file1) #percentage of the rows filled in the first file
+    percent2 = extract_percent(file2)
+
     save_path = combined_full_save_path + f"\combined_B&B_{percent_filled}%_{base_name}.csv" #save to new folder with participant ID folder
     output_df.to_csv(save_path)
+
+    return (base_name, percent_filled, percent1, percent2)
 
 def matching_key(header, all_keys): #return the key in the dictionary that cooresponds to the header given. Necessary because of changed naming convention
     header_cor, header_num, header_hand = get_pattern_cor(header)
@@ -168,9 +193,10 @@ def get_pattern_cor(string):
 #Get the file name without percentages and model specific values
 def extract_file_name(filepath): #e.g., P01_B_pre_preprocessed
     file_name = os.path.basename(filepath) #filename without path
-    pattern = r'(P\d+_[A-Za-z]+_pre_preprocessed)'
-    match = re.search(pattern, file_name)
+    pattern1 = r'(P\d+_[A-Za-z]+_(pre|post)+_preprocessed)'
+    match = re.search(pattern1, file_name)
     if match:
+        print(f"match: {match.group(1)}")
         return match.group(1)
 
 def matching_key_file(file1, file2): #return true if file1 and file2 are of same participant and trial
@@ -181,19 +207,40 @@ def matching_key_file(file1, file2): #return true if file1 and file2 are of same
         return True
     
 def get_pattern_file(file_name): #returns the identifying information of the file (e.g., P01_C_pre)
-    pattern = r"(P\d+_[A-Za-z]+_(pre|post))"
+    pattern = r"(P\d+_[A-Za-z]+_(?:post|pre))"
     match = re.search(pattern, file_name)
     if match:
         print(match.group(1))
         return match.group(1)
+    
+def extract_percent(file_name): #extract the percentage of filled rows from the file name (two different naming conventions)
+    pattern1 = r"(\d\d)(%)"
+    match1 = re.search(pattern1, file_name)
+    if match1:
+        print(match1.group(1))
+        return match1.group(1)
+    
+    pattern2 = r"(_)(\d\d)(_)"
+    match2 = re.search(pattern2, file_name)
+    if match2:
+        print(match2.group(2))
+        return match2.group(2)
+    
+    pattern3 = r"(_)(\d)(_)"
+    match3 = re.search(pattern3, file_name)
+    if match3:
+        print(match3.group(2))
+        return match3.group(2)
+    
 # matching_key("x 21 hi", ["24 x", "21 kjh x"])
 file2 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Holistic\0.6 Detect 0.9 Track\P01\B&B_54%_P01_B_pre_preprocessed_0.6d_0.9t_0.34%.csv"
 file1 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Hand\0.1d 0.5p 1.0t\P01\B&B_20_%P01_B_pre_preprocessed_0.1d_0.5p_1t_19.0%.csv"
 # combine_outputs(file1, file2)
+# extract_percent(file1)
 
-save_path = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models Test Environment\Combined Outputs"
-folder1 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models Test Environment\Hand Test"
-folder2 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models Test Environment\Holistic Test"
+save_path = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models Test Environment\Environment 2\Combined Models"
+folder1 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models Test Environment\Environment 2\Hand Test"
+folder2 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models Test Environment\Environment 2\Holistic Test"
 combine_outputs_folder(folder1, folder2, save_path)
 
         # if row.isna().all() == True: #check all cells are empty
