@@ -26,7 +26,7 @@ def process_folder(folder):
   #Run with parallization
   Parallel(n_jobs=-1, verbose=10)(delayed(process_video)(os.path.join(folder, file)) for file in vid_files)
 
-model_path = r'C:\Users\grace\Documents\GitHub\mediapipe\hand_landmarker.task'
+model_path = r'C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Github\mediapipe\Hand_Landmark\hand_landmarker.task'
 
 # Create a hand landmarker instance with the video mode:
 def process_video(video_to_process):
@@ -264,4 +264,4 @@ def draw_landmarks_on_image(rgb_image, detection_result): #taken directly from m
 
   return annotated_image
 
-process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\Hand\0.1d 0.5p 0.7t")
+process_folder(r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Coordinate Testing\Corners")

@@ -11,8 +11,8 @@ import re
 #To Do:
 #- could make it so that 1 and 2 can be interchangable. Just use the folder name for the model columns and take the matching_key function for file1 as well.
     #- maybe don't do this because holistic has swapped right/left so hand to hard code this for file 2.
-#- could make filling of csv from file a seperate function
-#- NEED TO SWAP WHERE HOLISTIC ACTUALLY SAVES!!!! Save to right if left header name.
+#- add model1_name model2_name to name column and csv file
+#- Not extracting file name for a few if there was a change to file name. E.g., B&B_16%_P32_A_post_reduced_preprocessed_0.6d_0.9t_0.13%. Reduced causes issues.
 
 def combine_outputs_folder(folder1, folder2, combined_save_path): #these should be the parent folders for two different models. Assume folder1 will take preference if data for frame in both.
     parent_folder1 = os.listdir(folder1)
@@ -48,12 +48,13 @@ def combine_outputs_folder(folder1, folder2, combined_save_path): #these should 
 
                         d_file = {}
                         d_file["File Name"] = base_name
-                        d_file["Combined %"] = new_percent
-                        d_file["File 1 %"] = percent1
-                        d_file["File 2 %"] = percent2
+                        d_file["Combined Model %"] = new_percent
+                        d_file["Model 1 %"] = percent1
+                        d_file["Model 2 %"] = percent2
 
-                        gained_percent = new_percent - max(percent1, percent2)
-                        d_file["Gained & %"] = gained_percent
+#error with type. maybe not all intes
+                        gained_percent = int(float(new_percent) - max(float(percent1), float(percent2)))
+                        d_file["Gained %"] = gained_percent
 
                         df_list.append(d_file)
     output_df = pd.DataFrame(df_list)
@@ -139,11 +140,6 @@ def combine_outputs(file1, file2, participant, combined_full_save_path): #two fi
 
                     if d_frame[match_key] == None: #has not been filled already by file 1
                         d_frame[match_key] = value
-                        # print(d_frame[match_key])
-                        # print(match_key)
-                        # print(f"header: {header}")
-                        # print(master_index)
-                        # print(d_frame)
 
                 else: #nothing detected
                     d_frame["Holistic Right"] = 0
@@ -154,14 +150,23 @@ def combine_outputs(file1, file2, participant, combined_full_save_path): #two fi
     non_none_rows = output_df.iloc[:, 6:].notna().any(axis=1).sum()
     percent_filled = (round(non_none_rows/output_df.shape[0], 2))*100
     print(f"non-None row: {non_none_rows}")
-    print(f"% data rows: {non_none_rows/output_df.shape[0]}")
+    print(f"% data rows: {percent_filled}")
 
     base_name = extract_file_name(file1)
 
-    percent1 = extract_percent(file1) #percentage of the rows filled in the first file
-    percent2 = extract_percent(file2)
+    #find the percent of rows filled by the original models.
+    non_none_rows1 = file1_df.iloc[:, 2:].notna().any(axis=1).sum()
+    percent1 = (round(non_none_rows1/file1_df.shape[0], 2))*100
 
-    save_path = combined_full_save_path + f"\combined_B&B_{percent_filled}%_{base_name}.csv" #save to new folder with participant ID folder
+    non_none_rows2 = file2_df.iloc[:, 2:].notna().any(axis=1).sum()
+    percent2 = (round(non_none_rows2/file2_df.shape[0], 2))*100
+
+    print(percent1, percent2)
+
+    # percent1 = extract_percent(file1) #percentage of the rows filled in the first file
+    # percent2 = extract_percent(file2)
+
+    save_path = combined_full_save_path + f"\combined_B&B_{int(percent_filled)}%_{base_name}.csv" #save to new folder with participant ID folder
     output_df.to_csv(save_path)
 
     return (base_name, percent_filled, percent1, percent2)
@@ -193,7 +198,7 @@ def get_pattern_cor(string):
 #Get the file name without percentages and model specific values
 def extract_file_name(filepath): #e.g., P01_B_pre_preprocessed
     file_name = os.path.basename(filepath) #filename without path
-    pattern1 = r'(P\d+_[A-Za-z]+_(pre|post)+_preprocessed)'
+    pattern1 = r'(P\d+_[A-Za-z]+_(pre|post)+_preprocessed)' #REMOVE "preprocessed". Some have another word before that.
     match = re.search(pattern1, file_name)
     if match:
         print(f"match: {match.group(1)}")
@@ -212,35 +217,54 @@ def get_pattern_file(file_name): #returns the identifying information of the fil
     if match:
         print(match.group(1))
         return match.group(1)
-    
+
+#this function would be better replaced by just searching for the percent in the file.
 def extract_percent(file_name): #extract the percentage of filled rows from the file name (two different naming conventions)
-    pattern1 = r"(\d\d)(%)"
-    match1 = re.search(pattern1, file_name)
-    if match1:
-        print(match1.group(1))
-        return match1.group(1)
     
-    pattern2 = r"(_)(\d\d)(_)"
+    # pattern = r"\d+(\.\d+)?(%)"
+    # match = re.search(pattern, file_name)
+    # if match:
+    #     print(f"percent: {match.group(1)}")
+    #     return match.group(1)
+    
+    # pattern1 = r"(\d\d)(%)"
+    # match1 = re.search(pattern1, file_name)
+    # if match1:
+    #     print(match1.group(1))
+    #     return match1.group(1)
+    
+    pattern2 = r"(_)(\d+)(_)"
     match2 = re.search(pattern2, file_name)
     if match2:
-        print(match2.group(2))
+        print(f"match2: {match2.group(2)}")
         return match2.group(2)
     
-    pattern3 = r"(_)(\d)(_)"
-    match3 = re.search(pattern3, file_name)
-    if match3:
-        print(match3.group(2))
-        return match3.group(2)
+    # pattern3 = r"(_)(\d)(_)"
+    # match3 = re.search(pattern3, file_name)
+    # if match3:
+    #     print(match3.group(2))
+    #     return match3.group(2)
+
+    pattern4 = r"(_)(\d+)(%_)" #e.g., B&B_0%_P04_A_post_preprocessed_0.6d_0.9t_0.0%.csv
+    match4 = re.search(pattern4, file_name)
+    if match4:
+        print(f"match4: {match4.group(2)}")
+        return match4.group(2)
     
 # matching_key("x 21 hi", ["24 x", "21 kjh x"])
-file2 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Holistic\0.6 Detect 0.9 Track\P01\B&B_54%_P01_B_pre_preprocessed_0.6d_0.9t_0.34%.csv"
-file1 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Hand\0.1d 0.5p 1.0t\P01\B&B_20_%P01_B_pre_preprocessed_0.1d_0.5p_1t_19.0%.csv"
+# file2 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Holistic\0.6 Detect 0.9 Track\P01\B&B_54%_P01_B_pre_preprocessed_0.6d_0.9t_0.34%.csv"
+# file1 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Hand\0.1d 0.5p 1.0t\P01\B&B_20_%P01_B_pre_preprocessed_0.1d_0.5p_1t_19.0%.csv"
 # combine_outputs(file1, file2)
 # extract_percent(file1)
 
-save_path = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models Test Environment\Environment 2\Combined Models"
-folder1 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models Test Environment\Environment 2\Hand Test"
-folder2 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models Test Environment\Environment 2\Holistic Test"
-combine_outputs_folder(folder1, folder2, save_path)
+save_path = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models"
+folder1 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Hand\0.1d 0.5p 1.0t"
+folder2 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Holistic\0.6 Detect 0.9 Track"
+model1_name = "Hand 0.1d 0.5p 1.0t"
+model2_name = "Holistic 0.6d 0.9t"
 
-        # if row.isna().all() == True: #check all cells are empty
+# save_path = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models Test Environment\Environment 4\Combine Models"
+# folder1 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models Test Environment\Environment 4\Hand"
+# folder2 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models Test Environment\Environment 4\Holistic"
+combine_outputs_folder(folder1, folder2, save_path)
+#9:30 start
