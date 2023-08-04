@@ -31,14 +31,43 @@ def graph_folder_avgparticipant_subplot(folder):
     fig_manager.window.title('Percent Frames w Landmarks - Per Participant')
     plt.show()
 
-file = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\B&B % Frames\Model B&B %\Average % Participants.xlsx"
+file = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\B&B % Frames\Model B&B %\Average % Frames Per Participant.xlsx"
 
-df = pd.read_excel(file, "Sheet2")
+df = pd.read_excel(file, "Hand & Holistic Wide Format")
+print(df.head())
 
-aov = pg.anova(dv='Percentage', between='Model', data=df, detailed=True)
+#Check for Normality (use wide format)
+# normality = pg.normality(df["Hand Legacy Avg % Frames with Detected Landmark"], method='normaltest')
+# pg.print_table(normality)
 
-pg.print_table(aov)
+# #Quantile-quantile plot
+# data = df["Hand Legacy Avg Percent Frames with Detected Landmark"]
+# qq = pg.qqplot(data, dist = 'norm')
+# plt.show()
 
-#run ANOVA on average percentage for each participant across models
+# # Find the outlier points
+# outliers = data[qq["outliers"]]
+# print(outliers)
 
-#run pairwise on average percentage for each participant acros models
+#One way ANOVA (use long format)
+# aov = pg.anova(dv='Percentage', within='Model', data=df, detailed=True)
+
+# One way repeated ANOVA (use long format)
+# aov = pg.rm_anova(dv='Percentage', within='Model', subject = "Participant", data=df, detailed=True)
+# pg.print_table(aov)
+
+# One-sample T-test
+ttest = pg.ttest(df[df['Difference'] >= 0]['Difference'], 0) #compare with 0
+pg.print_table(ttest)
+
+#Pair-wise Test
+# pair_ttest = pg.pairwise_tests(dv='Percentage', within='Model', subject = "Video Index", data=df)
+# pg.print_table(pair_ttest)
+
+# ax = pg.plot_paired(data=df, dv='Percentage', within='Model', subject='Video Index')
+# ax.set_title("hand vs holistic")
+# plt.show()
+
+#Wilcoxan Signed-Rank
+# wx = pg.wilcoxon(df["Percentage Hand"], df["Percentage Holistic"])
+# pg.print_table(wx)

@@ -7,11 +7,13 @@ import seaborn as sns
 import os
 import numpy as np
 from matplotlib import style
+import plotly.express as px
 
 #Plot percent frames w landmarks for all videos (single subplot can be saved)
-def graph_folder_allvideos_subplot(folder):
+def allvideos_subplot(folder):
     parent_folder = os.listdir(folder)
-    fig, axs = plt.subplots(4, 1, figsize=(8, 4*4), tight_layout=True)
+    num_models = len(parent_folder)
+    fig, axs = plt.subplots(num_models, 1, figsize=(8, num_models*4), tight_layout=True)
     i = 0
     for file in parent_folder:
         if ".xlsx" in file:
@@ -30,8 +32,45 @@ def graph_folder_allvideos_subplot(folder):
     fig_manager.window.title('Percent Frames w Landmarks - All Videos')
     plt.show()
 
+#Plot percent frames w landmarks DIFFERENCE for all videos (single subplot can be saved)
+def allvideos_difference_subplot(file1, file2):
+
+    y_diff = []
+    data1 = pd.read_excel(file1, index_col=0)
+    data2 = pd.read_excel(file2, index_col=0)
+    y_diff = data1["Percent Frames with Landmark"] - data2["Percent Frames with Landmark"]
+    x_data = data1.index
+
+    #arrange max to min
+    # y_diff_sorted = y_diff.sort_values(ascending=False)
+    # x_data_newindex = pd.Series(range(1, len(y_diff_sorted) + 1))
+    # print(y_diff_sorted)
+    diff_df = pd.DataFrame({"Index": x_data,
+                   "Percent Frames with Landmark Difference": y_diff})
+
+    sns.barplot(x='Index', y='Percent Frames with Landmark Difference', data=diff_df, color = 'dodgerblue', 
+                order=diff_df.sort_values('Percent Frames with Landmark Difference', ascending=False).Index)
+    plt.title("Percent Difference (Hand Landmark - Holistic) of Frames with Detected Landmark per Video")
+    plt.xlabel("Participant Videos (n=200)")
+    plt.ylabel("Percent Difference (Hand Landmark - Holistic) of Frames with Detected Landmark")
+    plt.gca().set_xticklabels([])
+    plt.show()
+
+#Plot the percentage frames w landmark DIFFERENCE for average of each participant
+def avg_participant_difference(file):
+    df = pd.read_excel(file, "Hand & Holistic Wide Format")
+    sns.barplot(x='Participant', y='Difference', data=df, color = 'dodgerblue', 
+                order=df.sort_values('Difference', ascending=False).Participant)
+    plt.title("Percent Difference (Hand Landmark Model - Holistic Model) of Avg. Frames with Detected Landmark per Participant")
+    plt.xlabel("Participants (n=35)")
+    plt.ylabel("Percent Difference (Hand Landmark - Holistic) of Avg. Frames with Detected Landmark")
+    plt.gca().set_xticklabels([])
+    plt.show()
+
+
 #Plot percent frames w landmarks for all videos (need to save each graph seperately)
 def graph_folder_allvideos(folder):
+
     parent_folder = os.listdir(folder)
     for file in parent_folder:
         if ".xlsx" in file:
@@ -65,6 +104,21 @@ def graph_folder_avgparticipant_subplot(folder):
     fig_manager = plt.get_current_fig_manager()
     fig_manager.window.title('Percent Frames w Landmarks - Per Participant')
     plt.show()
+
+#Ternary plot for average percentage of participants for the 3 
+def ternary(file):
+    df = pd.read_excel(file, "Ternary Plot All Data")
+    fig = px.scatter_ternary(df, a="Holistic", b="Hand", c="Hand Legacy")
+    fig.update_layout(
+        # title="Comparison of Landmark Detection Presence: Hand vs Hand Legacy vs Holistic Models",
+        # title_font=dict(size=24),
+        ternary_aaxis_title_font=dict(family="Calibri", size=20, color="Black"),  # Font size for axis A title
+        ternary_baxis_title_font=dict(family="Calibri", size=20, color="Black"),  # Font size for axis B title
+        ternary_caxis_title_font=dict(family="Calibri", size=20, color="Black"),  # Font size for axis C title
+)
+    fig.update_traces(marker=dict(size=12))
+    fig.show()
+
 
 #Bar chart of number of participants with percentage of frames with landmarks above threshold of 30%
 def threshold(folder, threshold):
@@ -225,7 +279,6 @@ def allvideos_model_diff(folder): #Folder should contain 2 models to compare. Fo
     fig_manager.window.title(f"Percent Frames with Landmarks Difference- {folder_name}")
     plt.show()
 
-
 #Bar chart of number of participant pairs (pre and post) both with percentage of frames with landmarks above threshold of 30%
 #Assumes that the spreadsheet is in order of participant trials. E.g., 01 first with all pre and post back to back.
 
@@ -237,11 +290,15 @@ def allvideos_model_diff(folder): #Folder should contain 2 models to compare. Fo
 #Determine if both of the pairs are above the threshold.
 #If so, add to a counter.
 
-pair_threshold_multithres(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\B&B % Frames\Model B&B %\All Models (copies)", [30, 40, 50, 60])
 
-
-folder = r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\B&B % Frames"
+# folder = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\B&B % Frames\Model B&B %\Hand & Holistic Models (copies)"
+# file1 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\B&B % Frames\Model B&B %\Hand Models\Hand Percentage Filled 0.1d 0.5p 1.0t Part. Avgs.xlsx"
+# file2 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\B&B % Frames\Model B&B %\Holistic Models\Holistic Percentage Filled 0.6d 0.9t Part. Avg.xlsx"
+# allvideos_difference_subplot(file1, file2)
 # threshol_subplot(folder, [30, 40, 50, 60])
 # graph_folder_allvideos_subplot(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\B&B % Frames")
 # graph_folder_avgparticipant_subplot(folder)
 # allvideos_model_diff(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\B&B % Frames\Model B&B %\Hand Models")
+
+file = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\B&B % Frames\Model B&B %\Average % Frames Per Participant.xlsx"
+ternary(file)
