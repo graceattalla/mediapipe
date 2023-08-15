@@ -1,2 +1,2 @@
-e="Comparison of Landmark Detection Presence: Hand vs Hand Legacy vs Holistic Models",
-        # title_
+st(df1["Peaks"], df2["Peaks"]) #compare with 0
+pg.print_table(t

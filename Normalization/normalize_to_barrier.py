@@ -2,7 +2,8 @@ import pandas as pd
 import os
 
 '''
-Normalize coordinates to barrier
+Normalize coordinates to barrier. Corrects for translatinal difference in videos. Then corrects for zoom differences in video by making each coordinate
+a ratio of the barrier height (determined by "barrier_coordinates").
 
 y: Above bottom of barrier is positive
 x: to the right of barrier is positive
@@ -44,26 +45,33 @@ def normalize(file, folder_path, barrier_file):
             y_bot = row["y2 normalized"]
             x_top = row["x1 normalized"]
             x_bot = row["x2 normalized"]
+            barrier_height = y_top-y_bot
 
     for index, row in cor_df.iterrows():
         d_frame = {}
         #get the normalized coordinates
         for column, value in row.items():
             if "x " in column:
-                normalized_name = column + " barrier norm."
+                norm_translation_name = column + " barrier translation norm."
+                norm_final_name = column + " barrier total norm"
                 if pd.notna(value): #keep as None if nothing there to start with
-                    d_frame[normalized_name] = value - x_top
+                    d_frame[norm_translation_name] = value - x_top
+                    d_frame[norm_final_name] = (value - x_bot)/barrier_height
 
                 else:
-                    d_frame[normalized_name] = None
+                    d_frame[norm_translation_name] = None
+                    d_frame[norm_final_name] = None
 
             if "y " in column:
-                normalized_name = column + " barrier norm."
+                norm_translation_name = column + " barrier translation norm."
+                norm_final_name = column + " barrier total norm"
                 if pd.notna(value): #keep as None if nothing there to start with
-                    d_frame[normalized_name] = value - y_bot
+                    d_frame[norm_translation_name] = value - y_bot
+                    d_frame[norm_final_name] = (value - y_bot)/barrier_height
 
                 else:
-                    d_frame[normalized_name] = None
+                    d_frame[norm_translation_name] = None
+                    d_frame[norm_final_name] = None
 
         df_list.append(d_frame)
 
