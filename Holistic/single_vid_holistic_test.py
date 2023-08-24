@@ -1,4 +1,10 @@
-import mediapipe_process_holistic_cropping as p
+'''
+Test MediaPipe holistic processing script by including execution time.
+
+Written by Grace Attalla
+'''
+
+import mediapipe_process_holistic as p
 import numpy as np
 import time
 

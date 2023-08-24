@@ -1,19 +1,20 @@
-'''Combine the outputs of two models to try to fill the gaps of missing data for each frame.
+'''
+Combine the outputs of two models to try to fill the gaps of missing data for each frame.
 Input: CSV files of outputs for videos with 2 different models
-Output: New CSV file for each video combining the model outputs. One column will also include which model was used.
+Output: New CSV file for each video combining the model outputs. Columns will also include which model was used.
 
-Note that hand and holistic label right/left hand oppositely'''
+Note that hand and holistic label right/left hand oppositely and had to be adjusted accordingly.
+
+Hand model is prioritized over holistic model when both have landmarks for a given frame.
+
+Written by Grace Attalla
+'''
 
 import pandas as pd
 import os
 import re
 
-#To Do:
-#- could make it so that 1 and 2 can be interchangable. Just use the folder name for the model columns and take the matching_key function for file1 as well.
-    #- maybe don't do this because holistic has swapped right/left so hand to hard code this for file 2.
-#- add model1_name model2_name to name column and csv file
-#- Not extracting file name for a few if there was a change to file name. E.g., B&B_16%_P32_A_post_reduced_preprocessed_0.6d_0.9t_0.13%. Reduced causes issues.
-
+#run for folder
 def combine_outputs_folder(folder1, folder2, combined_save_path): #these should be the parent folders for two different models. Assume folder1 will take preference if data for frame in both.
     parent_folder1 = os.listdir(folder1)
     parent_folder2 = os.listdir(folder2)
@@ -52,7 +53,6 @@ def combine_outputs_folder(folder1, folder2, combined_save_path): #these should 
                         d_file["Model 1 %"] = percent1
                         d_file["Model 2 %"] = percent2
 
-#error with type. maybe not all intes
                         gained_percent = int(float(new_percent) - max(float(percent1), float(percent2)))
                         d_file["Gained %"] = gained_percent
 
@@ -171,14 +171,16 @@ def combine_outputs(file1, file2, participant, combined_full_save_path): #two fi
 
     return (base_name, percent_filled, percent1, percent2)
 
-def matching_key(header, all_keys): #return the key in the dictionary that cooresponds to the header given. Necessary because of changed naming convention
+#return the key in the dictionary that cooresponds to the header given. Necessary because of changed naming convention
+def matching_key(header, all_keys):
     header_cor, header_num, header_hand = get_pattern_cor(header)
     for key in all_keys:
         key_cor, key_num, key_hand = get_pattern_cor(key)
         if key_cor == header_cor and key_num == header_num and header_hand == key_hand:
             return key
-        
-def matching_key_swap(header, all_keys): #return the key in the dictionary that cooresponds to the header given. If the header is left then use the right dictionary label (swapped labelling convention of holistic model)
+
+#return the key in the dictionary that cooresponds to the header given. If the header is left then use the right dictionary label (swapped labelling convention of holistic model)
+def matching_key_swap(header, all_keys): 
     header_cor, header_num, header_hand = get_pattern_cor(header)
     for key in all_keys:
         key_cor, key_num, key_hand = get_pattern_cor(key)
@@ -204,58 +206,38 @@ def extract_file_name(filepath): #e.g., P01_B_pre_preprocessed
         print(f"match: {match.group(1)}")
         return match.group(1)
 
-def matching_key_file(file1, file2): #return true if file1 and file2 are of same participant and trial
+#return true if file1 and file2 are of same participant and trial
+def matching_key_file(file1, file2): 
     print(file1, file2)
     file1_id = get_pattern_file(file1)
     file2_id = get_pattern_file(file2)
     if file1_id == file2_id:
         return True
-    
-def get_pattern_file(file_name): #returns the identifying information of the file (e.g., P01_C_pre)
+
+#returns the identifying information of the file (e.g., P01_C_pre)
+def get_pattern_file(file_name): 
     pattern = r"(P\d+_[A-Za-z]+_(?:post|pre))"
     match = re.search(pattern, file_name)
     if match:
         print(match.group(1))
         return match.group(1)
 
+#extract the percentage of filled rows from the file name (two different naming conventions)
 #this function would be better replaced by just searching for the percent in the file.
-def extract_percent(file_name): #extract the percentage of filled rows from the file name (two different naming conventions)
-    
-    # pattern = r"\d+(\.\d+)?(%)"
-    # match = re.search(pattern, file_name)
-    # if match:
-    #     print(f"percent: {match.group(1)}")
-    #     return match.group(1)
-    
-    # pattern1 = r"(\d\d)(%)"
-    # match1 = re.search(pattern1, file_name)
-    # if match1:
-    #     print(match1.group(1))
-    #     return match1.group(1)
+def extract_percent(file_name): 
+
     
     pattern2 = r"(_)(\d+)(_)"
     match2 = re.search(pattern2, file_name)
     if match2:
         print(f"match2: {match2.group(2)}")
         return match2.group(2)
-    
-    # pattern3 = r"(_)(\d)(_)"
-    # match3 = re.search(pattern3, file_name)
-    # if match3:
-    #     print(match3.group(2))
-    #     return match3.group(2)
 
     pattern4 = r"(_)(\d+)(%_)" #e.g., B&B_0%_P04_A_post_preprocessed_0.6d_0.9t_0.0%.csv
     match4 = re.search(pattern4, file_name)
     if match4:
         print(f"match4: {match4.group(2)}")
         return match4.group(2)
-    
-# matching_key("x 21 hi", ["24 x", "21 kjh x"])
-# file2 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Holistic\0.6 Detect 0.9 Track\P01\B&B_54%_P01_B_pre_preprocessed_0.6d_0.9t_0.34%.csv"
-# file1 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Hand\0.1d 0.5p 1.0t\P01\B&B_20_%P01_B_pre_preprocessed_0.1d_0.5p_1t_19.0%.csv"
-# combine_outputs(file1, file2)
-# extract_percent(file1)
 
 save_path = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models"
 folder1 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Hand\0.1d 0.5p 1.0t"
@@ -263,8 +245,4 @@ folder2 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Holistic
 model1_name = "Hand 0.1d 0.5p 1.0t"
 model2_name = "Holistic 0.6d 0.9t"
 
-# save_path = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models Test Environment\Environment 4\Combine Models"
-# folder1 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models Test Environment\Environment 4\Hand"
-# folder2 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models Test Environment\Environment 4\Holistic"
 combine_outputs_folder(folder1, folder2, save_path)
-#9:30 start

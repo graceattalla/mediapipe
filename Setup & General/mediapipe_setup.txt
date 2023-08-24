@@ -1,0 +1,5 @@
+Steps to setup MediaPipe (updated May 2023)
+
+Install python <= 3.10.0
+Install numpy==1.22.1
+Install mediapipe 

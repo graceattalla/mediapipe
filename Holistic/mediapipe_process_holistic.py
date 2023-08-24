@@ -1,3 +1,14 @@
+'''
+Process a single video with MediaPipe Hand Holsitic model. Save the outputs to a csv and skeleton video.
+
+MediaPipe Holistic: https://github.com/google/mediapipe/blob/master/docs/solutions/holistic.md#resources
+
+Input: Folder with participant subfolders of videos.
+Outputs: For each video, csv of MediaPipe outputs and skeleton video.
+
+Written by Grace Attalla
+'''
+
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision

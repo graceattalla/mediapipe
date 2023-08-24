@@ -1,1 +1,0 @@
-C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated

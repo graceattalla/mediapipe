@@ -1,14 +1,12 @@
 '''
-Get the Box and Blocks barrier image coordinates (top and bottom of barrier) of each video and save to a csv file. 
-Code request manually clicking top and bottom of barrier.
+Save the rotating variables to a csv to access later and preprocess videos. 
 
-Barrier approximated to be straight if slanted.
+Program will ask to click the 4 corners of the box for each video in the specified folder (at bottom of program). 
 
-These coordinates are to be used in normalization across videos.
+Start at top left corner and go in CW direction.
 
 Written by Grace Attalla
 '''
-
 
 import cv2
 import numpy as np
@@ -29,26 +27,31 @@ def process_folder(folder):
 
             for file in files:
                 
-                if ".MP4" in file or ".mp4" in file: #only process mp4 videos, can modify if different file type
-                    print(file)
+                if ".MP4" or ".mp4" in file: #only process mp4 videos, can modify if different file type
                     process_path = folder + "\\" + inner +"\\" + file #path to video
-                    barrier_coordinates(process_path)
+                    preprocess_variables(process_path)
 
-    save_path = os.path.join(folder, "Barrier_coordinates.csv")
+    save_path = os.path.join(folder, "Preprocessing_variables.csv")
     #Save to csv file (can open in Excel)
     output_df = pd.DataFrame(df_list)
     output_df.to_csv(save_path) 
 
 #setup dataframe to save each video's variables to. Each row contains one video.
-columns = ['video name', 'x1', 'y1', 'x2', 'y2', 'x1 normalized', 'y1 normalized', 'x2 normalized', 'y2 normalized']
+columns = ['video path', 'angle', 'center x', 'center y', 'x1', 'y1', 'x2', 'y2', 'x3', 'y3', 'x4', 'y4']
 df_list = []
 
 
+def rotate_image(image, angle, center):
+    # Get the rotation matrix
+    matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
+    # Perform the affine transformation
+    rotated_image = cv2.warpAffine(image, matrix, (image.shape[1], image.shape[0]))
+    return rotated_image
+
 #rotate, zoom and save preprocessed video
-def barrier_coordinates(video_to_process):
+def preprocess_variables(video_to_process):
     dict_vid = {}
-    name = os.path.basename(video_to_process)
-    dict_vid['video name'] = os.path.splitext(name)[0]
+    dict_vid['video path'] = video_to_process
 
     cap = cv2.VideoCapture(video_to_process)
         
@@ -74,29 +77,29 @@ def barrier_coordinates(video_to_process):
 
     # Some code adapted from ChatGPT
 
+    ### STEP 1: Get the cropping and rotating parameters from the first frame ###
+    ### STEP 1.a: Find the points of the box and blocks rectangle (click in CW direction starting at top left)###
     # Global variables to store the rectangle's coordinates
     points = []
-    done = False
+    rectangle_selected = False
 
     # Load the image
     image = np.copy(frame)
-    y_max = image.shape[0]
-    x_max = image.shape[1]
 
     # Mouse callback function
-    def select_barrier(event, x, y, flags, param):
-        nonlocal points, done #not sure if the nonlocal will cause other problems? I think it can't be global because of outer function?
+    def select_rectangle(event, x, y, flags, param):
+        nonlocal points, rectangle_selected #not sure if the nonlocal will cause other problems? I think it can't be global because of outer function?
 
         if event == cv2.EVENT_LBUTTONDOWN:
             points.append((x, y))
-            done = False
+            rectangle_selected = False
 
-            if len(points) == 2:
-                done = True
+            if len(points) == 4:
+                rectangle_selected = True
 
     # Create a window and bind the mouse callback function to it
-    cv2.namedWindow('Select Barrier')
-    cv2.setMouseCallback('Select Barrier', select_barrier)
+    cv2.namedWindow('Select Rectangle')
+    cv2.setMouseCallback('Select Rectangle', select_rectangle)
 
     start_time = time.time()
 
@@ -104,53 +107,68 @@ def barrier_coordinates(video_to_process):
         # Clone the original image
         display_image = image.copy()
 
-
-        # Select top and bottom of barrier
-        if done:
+        # Draw the rectangle defined by the four points
+        if rectangle_selected:
             cv2.drawContours(display_image, [np.array(points)], 0, (0, 255, 0), 2)
 
         # Display the image
-        cv2.imshow('Select Barrier', display_image)
+        cv2.imshow('Select Rectangle', display_image)
 
         # Exit the loop if 'ESC' key is pressed or rectangle is selected
         key = cv2.waitKey(1) & 0xFF
-        if key == 27 or (done and len(points) == 2):
+        if key == 27 or (rectangle_selected and len(points) == 4):
             break
 
-    # Check if the barrier is selected
-    if done and len(points) == 2:
+    # Check if the rectangle is selected
+    if rectangle_selected and len(points) == 4:
         # Extract the corner coordinates
         x1, y1 = points[0]
         x2, y2 = points[1]
+        x3, y3 = points[2]
+        x4, y4 = points[3]
 
         #assigning for readability in rotation
         top_left = points[0]
         top_right = points[1]
-
+        bottom_right = points[2]
+        bottom_left = points[3]
 
         dict_vid['x1'] = x1
         dict_vid['y1'] = y1
         dict_vid['x2'] = x2
         dict_vid['y2'] = y2
-
-        dict_vid['x1 normalized'] = x1/x_max
-        dict_vid['y1 normalized'] = 1-  y1/y_max #want 1 to be top of the frame
-        dict_vid['x2 normalized'] = x2/x_max
-        dict_vid['y2 normalized'] = 1 - y2/y_max
-
+        dict_vid['x3'] = x3
+        dict_vid['y3'] = y3
+        dict_vid['x4'] = x4
+        dict_vid['y4'] = y4
 
         # Print the corner coordinates
-        print("Top: ({}, {})".format(x1, y1))
-        print("Bottom: ({}, {})".format(x2, y2))
+        print("Top Left: ({}, {})".format(x1, y1))
+        print("Top Right: ({}, {})".format(x2, y2))
+        print("Bottom Right: ({}, {})".format(x3, y3))
+        print("Bottom Left: ({}, {})".format(x4, y4))
+
     # Close all windows
     cv2.destroyAllWindows()
+
+    ### STEP 1.b: Get rotation variables ###
+
+    # Calculate the angle of rotation
+    delta_x = top_right[0] - top_left[0]
+    delta_y = top_right[1] - top_left[1]
+    angle = np.degrees(np.arctan2(delta_y, delta_x))
+    dict_vid['angle'] = angle
+    print(f'angle: {angle}')
+
+    # Calculate the center of rotation
+    center = ((top_left[0] + top_right[0]) // 2, (top_left[1] + top_right[1]) // 2)
+    dict_vid['center x'] = center[0]
+    dict_vid['center y'] = center[1]
+    print(f'center: {center}')
 
     df_list.append(dict_vid)
 
     ### Step 1.c: Get zoom cropping variables ###- unnecessary because we will normalize
-
-    # center_height_box = (y2-y3)/2 + y3
-    # print(f'center box: {center_height_box}')
 
     cap.release()
 
@@ -160,4 +178,5 @@ def barrier_coordinates(video_to_process):
     print("Execution Time:", execution_time, "seconds")
     print(dict_vid)
 
-process_folder(r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Normalization test\Folder")
+
+process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Need to Rotate")

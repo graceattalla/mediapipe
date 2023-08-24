@@ -1,12 +1,9 @@
 '''
-Process a folder of videos with MediaPipe Hand Holsitic model. Save the outputs to a csv and skeleton video.
+Run MediaPipe model at various hyperparameters for a multiple videos and save outputs to a csv (parallelization is used when running MediaPipe).
 
-MediaPipe Holistic Model: https://github.com/google/mediapipe/blob/master/docs/solutions/holistic.md#resources
+Input: MediaPipe Video
 
-Parallelization is used to increase efficiency.
-
-Input: Folder with participant subfolders of videos.
-Outputs: For each video, csv of MediaPipe outputs and skeleton video.
+Output: csv of % frames with landmarks detected for various parameters
 
 Written by Grace Attalla
 '''
@@ -20,32 +17,59 @@ import cv2
 import os
 import pandas as pd
 import numpy as np
-from joblib import Parallel, delayed
-
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_holistic = mp.solutions.holistic
 
-#Process folder with participant subfolders
-def process_folder(folder):
-  parent_folder = os.listdir(folder)
-  vid_files = []
+def draw_landmarks_on_image(image, results):
+  image.flags.writeable = True
+  # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+  annotated_image = np.copy(image)
 
-  for inner in parent_folder:
-      inner_folder = os.path.join(folder, inner) #get full path to inner folder
+  #face landmarks
 
-      if os.path.isdir(inner_folder): #check if it is a folder
-          inner_files = os.listdir(inner_folder)
-          full_file_paths = [os.path.join(inner_folder, file) for file in inner_files if (".mp4" or ".MP4") in file]
-          vid_files.extend(full_file_paths)
-  # print(f"vid_files: {vid_files}") #test
+  # mp_drawing.draw_landmarks(
+  #     annotated_image,
+  #     results.face_landmarks,
+  #     mp_holistic.FACEMESH_TESSELATION,
+  #     landmark_drawing_spec=None,
+  #     connection_drawing_spec=mp_drawing_styles
+  #     .get_default_face_mesh_tesselation_style())
+  # mp_drawing.draw_landmarks(
+  #     annotated_image,
+  #     results.face_landmarks,
+  #     mp_holistic.FACEMESH_CONTOURS,
+  #     landmark_drawing_spec=None,
+  #     connection_drawing_spec=mp_drawing_styles
+  #     .get_default_face_mesh_contours_style())
 
-  #Run with parallization
-  Parallel(n_jobs=-1, verbose=10)(delayed(process_video)(os.path.join(folder, file)) for file in vid_files)
+  mp_drawing.draw_landmarks(
+      annotated_image,
+      results.pose_landmarks,
+      mp_holistic.POSE_CONNECTIONS,
+      landmark_drawing_spec=mp_drawing_styles
+      .get_default_pose_landmarks_style())
+  mp_drawing.draw_landmarks(
+    annotated_image,
+    results.left_hand_landmarks,
+    mp_holistic.HAND_CONNECTIONS,
+    landmark_drawing_spec=mp_drawing_styles
+    .get_default_hand_landmarks_style())
+  mp_drawing.draw_landmarks(
+    annotated_image,
+    results.right_hand_landmarks,
+    mp_holistic.HAND_CONNECTIONS,
+    landmark_drawing_spec=mp_drawing_styles
+    .get_default_hand_landmarks_style())
+  # # Flip the image horizontally for a selfie-view display.
+  # cv2.imshow('MediaPipe Holistic', cv2.flip(image, 1))
+  # if cv2.waitKey(5) & 0xFF == 27:
+  #   break
+  return annotated_image
 
-#Process video with MediaPipe holistic
-def process_video(video_to_process):
+#Process video with holistic model
+def process_video(video_to_process, mindetect):
 
   #CREATE THE TASK
   BaseOptions = mp.tasks.BaseOptions
@@ -69,9 +93,10 @@ def process_video(video_to_process):
 
   '''
 
-  mindetect = 0.6
+  # mindetect = 0.8
   mintrack = 0.9
   numhands = 1
+
 
   # options = PoseLandmarkerOptions(
   #     base_options=BaseOptions(model_asset_path=model_path),
@@ -80,7 +105,7 @@ def process_video(video_to_process):
   
   with mp_holistic.Holistic(
     min_detection_confidence=mindetect,
-    min_tracking_confidence=mintrack, model_complexity=2,max_num_hands=numhands) as holistic: #refine_face_landmarks = True
+    min_tracking_confidence=mintrack, model_complexity=2) as holistic: #refine_face_landmarks = True
     # The landmarker is initialized. Use it here.
     df_list = []
     df_frame_list = []
@@ -104,6 +129,7 @@ def process_video(video_to_process):
     #Check if the camera opened successfully
     if(cap.isOpened()==False):
         print("ERROR! Problem opening video stream or file")
+
 
     #Get the current position of the video file in milliseconds
     position_msec = cap.get(cv2.CAP_PROP_POS_MSEC)
@@ -130,9 +156,8 @@ def process_video(video_to_process):
         
     all_keys.extend(cor_hand_keys)  
     all_keys.extend(cor_pose_keys)  
-
+  
     #Read through the video until it is finished
-    
     while(cap.isOpened()):
       #Capture each frame-by-frame
       frame_number = int(cap.get(cv2.CAP_PROP_POS_FRAMES)) #frame number must be an int I think
@@ -184,6 +209,7 @@ def process_video(video_to_process):
 
         j = 1
 
+
         #commented to generate csv without this info for parameter optimization
         # if holistic_landmarker_result.pose_landmarks != None:
         #   for point in holistic_landmarker_result.pose_landmarks.landmark:
@@ -195,15 +221,14 @@ def process_video(video_to_process):
         #     d_frame[num_str + " visibility" + " Pose"] = point.visibility
 
         #     j += 1
-
           
         #add the frame dictionary as a new sub-list to the total list
         df_list.append(d_frame)
 
         # #draw landmarks on the image
         annotated_frame = draw_landmarks_on_image(frame, holistic_landmarker_result)
-        outvid.write(annotated_frame) #write to outvid for each frame
-                    
+        outvid.write(annotated_frame) #write to outvid for each frame         
+          
       else:
         break
     output_df = pd.DataFrame(df_list)
@@ -227,53 +252,34 @@ def process_video(video_to_process):
   outvid.release()
   cap.release()
 
-  return holistic_landmarker_result
+  return holistic_landmarker_result, output_df
 
-#Create skeleton of outputted landmarks
-def draw_landmarks_on_image(image, results):
-  image.flags.writeable = True
-  # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-  annotated_image = np.copy(image)
+#brute force method...
 
-  #face landmarks
+video_to_process = r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Holistic\Fatigue Cropped\P05\P05_B_post_6s_1080p.mp4"
 
-  # mp_drawing.draw_landmarks(
-  #     annotated_image,
-  #     results.face_landmarks,
-  #     mp_holistic.FACEMESH_TESSELATION,
-  #     landmark_drawing_spec=None,
-  #     connection_drawing_spec=mp_drawing_styles
-  #     .get_default_face_mesh_tesselation_style())
-  # mp_drawing.draw_landmarks(
-  #     annotated_image,
-  #     results.face_landmarks,
-  #     mp_holistic.FACEMESH_CONTOURS,
-  #     landmark_drawing_spec=None,
-  #     connection_drawing_spec=mp_drawing_styles
-  #     .get_default_face_mesh_contours_style())
+max_num_rows = 0
+max_mindetect = 0
+max_minpres = 0
 
-  mp_drawing.draw_landmarks(
-      annotated_image,
-      results.pose_landmarks,
-      mp_holistic.POSE_CONNECTIONS,
-      landmark_drawing_spec=mp_drawing_styles
-      .get_default_pose_landmarks_style())
-  mp_drawing.draw_landmarks(
-    annotated_image,
-    results.left_hand_landmarks,
-    mp_holistic.HAND_CONNECTIONS,
-    landmark_drawing_spec=mp_drawing_styles
-    .get_default_hand_landmarks_style())
-  mp_drawing.draw_landmarks(
-    annotated_image,
-    results.right_hand_landmarks,
-    mp_holistic.HAND_CONNECTIONS,
-    landmark_drawing_spec=mp_drawing_styles
-    .get_default_hand_landmarks_style())
-  # # Flip the image horizontally for a selfie-view display.
-  # cv2.imshow('MediaPipe Holistic', cv2.flip(image, 1))
-  # if cv2.waitKey(5) & 0xFF == 27:
-  #   break
-  return annotated_image
+opt_list = []
 
-process_folder(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Not Done\0.6 Detect 0.9 Track")
+#Brute force run though different hyperparameters
+for mindetect in np.arange(0.3, 1.0, 0.1):
+  output_df = process_video(video_to_process, mindetect)[1]
+  non_none_rows = output_df.notna().any(axis=1).sum()
+  if non_none_rows > max_num_rows:
+    max_num_rows = non_none_rows
+    max_mindetect = mindetect
+    print(f"NEW MAX: {max_num_rows}")
+  print(f"non none rows: {non_none_rows}")
+  print(f"detect: {mindetect}")
+
+  row_data = {'Num Rows': non_none_rows, 'Detect': mindetect}
+  opt_list.append(row_data)
+
+opt_df = pd.DataFrame(opt_list)
+
+
+save_opt_path = os.path.splitext(video_to_process)[0] + "_Optimization" + ".csv"
+opt_df.to_csv(save_opt_path, index=False)

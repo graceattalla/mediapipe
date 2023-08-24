@@ -1,0 +1,26 @@
+Optimized Parameter Outputs
+
+Parameters based on approximate optimization for each model.
+Each video achieves very different percentages of frames with landmarks detected therefore it was difficult to optimize for an ideal parameter.
+With the Hand Landmark model, various optimization algorithms were attemtempted however brute force was faster to test one video.
+For other models, approximate optimization with different sample videos was used.
+
+Hand Landmark:
+min_hand_detection_confidence = 0.1
+min_hand_presence_confidence = 0.5
+min_tracking_confidence = 1
+
+Pose:
+min_pose_detection_confidence =
+min_pose_presence_confidence =
+min_tracking_confidence =
+
+Holistic:
+min_detection_confidence = 0.6
+min_tracking_confidence = 0.9
+
+Hand Legacy:
+min_detection_confidence = 0.2
+min_tracking_confidence = 0.7
+0.1-0.4d and 0.1-1t are all similar with very lower outputs. Track minorly impacts percentage by 2 %
+This is a an approximation.

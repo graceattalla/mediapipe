@@ -1,15 +1,18 @@
-import pandas as pd
-import os
-
 '''
-Normalize coordinates to barrier. Corrects for translatinal difference in videos. Then corrects for zoom differences in video by making each coordinate
-a ratio of the barrier height (determined by "barrier_coordinates").
+Normalize coordinates to barrier (collected from barrier_coordiates.py). 
+Corrects for translatinal difference in videos. Then corrects for zoom differences in video by making each coordinate a ratio of the barrier height (determined by "barrier_coordinates").
 
 y: Above bottom of barrier is positive
 x: to the right of barrier is positive
 
-Input csv and output csv with normalized to barrier coordinates
+Input: csv with oroginal coordinates and barrier coordinates
+Output: csv with normalized to barrier coordinates
+
+Written by Grace Attalla
 '''
+
+import pandas as pd
+import os
 
 def process_folder(folder, barrier_file):
 

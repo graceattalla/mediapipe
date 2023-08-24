@@ -1,4 +1,10 @@
-#Bar graph with % frames with landmarks detected for all videos in each model.
+'''
+Various plots to compare different mediapipe models. Descriptions of each plot are commented.
+
+
+Written by Grace Attalla
+'''
+
 
 import pandas as pd
 pd.plotting.register_matplotlib_converters
@@ -105,7 +111,7 @@ def graph_folder_avgparticipant_subplot(folder):
     fig_manager.window.title('Percent Frames w Landmarks - Per Participant')
     plt.show()
 
-#Ternary plot for average percentage of participants for the 3 
+#Ternary plot for average percentage of participants for the 3 models
 def ternary(file):
     df = pd.read_excel(file, "Ternary Plot All Data")
     fig = px.scatter_ternary(df, a="Holistic", b="Hand", c="Hand Legacy")
@@ -294,29 +300,7 @@ def allvideos_model_diff(folder): #Folder should contain 2 models to compare. Fo
     fig_manager.window.title(f"Percent Frames with Landmarks Difference- {folder_name}")
     plt.show()
 
-#Bar chart of number of participant pairs (pre and post) both with percentage of frames with landmarks above threshold of 30%
-#Assumes that the spreadsheet is in order of participant trials. E.g., 01 first with all pre and post back to back.
 
-#To Do:
-# Finish checking if pre and post are in prev and cur. Count if so.
-
-
-#Loop through row of csv and determine if there is a pair.
-#Determine if both of the pairs are above the threshold.
-#If so, add to a counter.
-
-
-# folder = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\B&B % Frames\Model B&B %\Hand & Holistic Models (copies)"
-# file1 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\B&B % Frames\Model B&B %\Hand Models\Hand Percentage Filled 0.1d 0.5p 1.0t Part. Avgs.xlsx"
-# file2 = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\B&B % Frames\Model B&B %\Holistic Models\Holistic Percentage Filled 0.6d 0.9t Part. Avg.xlsx"
-# allvideos_difference_subplot(file1, file2)
-# threshol_subplot(folder, [30, 40, 50, 60])
-# graph_folder_allvideos_subplot(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\B&B % Frames")
-# graph_folder_avgparticipant_subplot(folder)
-# allvideos_model_diff(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\B&B % Frames\Model B&B %\Hand Models")
-
-# file = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\B&B % Frames\Model B&B %\Average % Frames Per Participant.xlsx"
-# ternary(file)
 
 file = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models\Combined Percent Comparison.xlsx"
 percent_increase(file)
