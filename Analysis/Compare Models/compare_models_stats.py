@@ -31,14 +31,14 @@ def graph_folder_avgparticipant_subplot(folder):
     fig_manager.window.title('Percent Frames w Landmarks - Per Participant')
     plt.show()
 
-file = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\B&B % Frames\Model B&B %\Average % Frames Per Participant.xlsx"
+file = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models\Combined Percent Comparison.xlsx"
 
-df = pd.read_excel(file, "Hand & Holistic Wide Format")
+df = pd.read_excel(file)
 print(df.head())
 
 #Check for Normality (use wide format)
-# normality = pg.normality(df["Hand Legacy Avg % Frames with Detected Landmark"], method='normaltest')
-# pg.print_table(normality)
+normality = pg.normality(df["Gained %"], method='normaltest')
+pg.print_table(normality)
 
 # #Quantile-quantile plot
 # data = df["Hand Legacy Avg Percent Frames with Detected Landmark"]
@@ -57,7 +57,7 @@ print(df.head())
 # pg.print_table(aov)
 
 # One-sample T-test
-ttest = pg.ttest(df[df['Difference'] >= 0]['Difference'], 0) #compare with 0
+ttest = pg.ttest(df['Gained %'], 0) #compare with 0
 pg.print_table(ttest)
 
 #Pair-wise Test

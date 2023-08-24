@@ -119,6 +119,21 @@ def ternary(file):
     fig.update_traces(marker=dict(size=12))
     fig.show()
 
+#Bar plot of percent increase from combining models
+def percent_increase(file):
+    df = pd.read_excel(file)
+    sns.barplot(x='File Name', y='Hand - Holistic', data=df, color = 'deepskyblue', 
+                order=df.sort_values('Hand - Holistic', ascending=False)["File Name"])
+    sns.barplot(x='File Name', y='Gained %', data=df, color = 'navy', 
+                order=df.sort_values('Hand - Holistic', ascending=False)["File Name"])
+    plt.title("Percent Difference Hand minus Holistic (Dark) & Percent Gained Per Video (dark)")
+    plt.xlabel("Videos (n=200)")
+    plt.ylabel("Percent")
+    plt.gca().set_xticklabels([])
+
+
+    plt.show()
+
 
 #Bar chart of number of participants with percentage of frames with landmarks above threshold of 30%
 def threshold(folder, threshold):
@@ -300,5 +315,8 @@ def allvideos_model_diff(folder): #Folder should contain 2 models to compare. Fo
 # graph_folder_avgparticipant_subplot(folder)
 # allvideos_model_diff(r"C:\Users\grace\Documents\Fatigue Study\Fatigue Videos\Rotated Videos\Rotated (Mediapipe)\MediaPipe Done\B&B % Frames\Model B&B %\Hand Models")
 
-file = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\B&B % Frames\Model B&B %\Average % Frames Per Participant.xlsx"
-ternary(file)
+# file = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\B&B % Frames\Model B&B %\Average % Frames Per Participant.xlsx"
+# ternary(file)
+
+file = r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Combine Models\Combined Percent Comparison.xlsx"
+percent_increase(file)

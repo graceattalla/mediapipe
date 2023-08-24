@@ -56,9 +56,12 @@ def process_video(video_to_process):
   '''
 
   numhands = 1
+  # mindetect = 0.1
+  # minpres = 0.5
+  # mintrack = 0.7
   mindetect = 0.1
-  minpres = 0.5
-  mintrack = 0.7
+  minpres = 0.2
+  mintrack = 0.2
 
 
   options = HandLandmarkerOptions(
@@ -264,6 +267,6 @@ def draw_landmarks_on_image(rgb_image, detection_result): #taken directly from m
 
   return annotated_image
 
-process_video(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Test Examples\Nice_video.mp4")
+process_video(r"C:\Users\grace\OneDrive\Surface Laptop Desktop\BCI4Kids\Mediapipe\Videos\Test Examples\Box & Blocks Sample Video Shortened (1).mov")
 
 # process_folder(r"C:\Users\grace\OneDrive\BCI4Kids (One Drive)\MediaPipe Done\Coordinate Testing\Corners")
